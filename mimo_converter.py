@@ -482,10 +482,10 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
         self.input_flow_share_relation = Constraint(
             [
-                (n, g, s, p, t)
+                (n, i, s, p, t)
                 for p, t in m.TIMEINDEX
                 for n in group
-                for g in n.input_groups
+                for i in n.inputs
                 for s in FLOW_SHARE_TYPES
             ],
             noruleinit=True,
@@ -504,7 +504,7 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             lhs = m.flow[i, n, p, t] / n.conversion_factors[i][t]
                             rhs = block.INPUT_GROUP_FLOW[n, g, p, t] * flow_share[t]
                             block.input_flow_share_relation.add(
-                                (n, g, flow_share_type, p, t),
+                                (n, i, flow_share_type, p, t),
                                 op(lhs, rhs),
                             )
 
@@ -514,10 +514,10 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
         self.output_flow_share_relation = Constraint(
             [
-                (n, g, s, p, t)
+                (n, o, s, p, t)
                 for p, t in m.TIMEINDEX
                 for n in group
-                for g in n.output_groups
+                for o in n.outputs
                 for s in FLOW_SHARE_TYPES
             ],
             noruleinit=True,
@@ -541,7 +541,7 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             lhs = m.flow[n, o, p, t] / n.conversion_factors[o][t]
                             rhs = block.OUTPUT_GROUP_FLOW[n, g, p, t] * flow_share[t]
                             block.output_flow_share_relation.add(
-                                (n, g, flow_share_type, p, t), op(lhs, rhs)
+                                (n, o, flow_share_type, p, t), op(lhs, rhs)
                             )
 
         self.output_flow_share_relation_build = BuildAction(

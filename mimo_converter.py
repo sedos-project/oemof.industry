@@ -473,9 +473,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
         def _get_operator_from_flow_share_type(flow_share_type):
             if flow_share_type == "min":
-                return operator.gt
+                return operator.ge
             if flow_share_type == "max":
-                return operator.lt
+                return operator.le
             if flow_share_type == "fix":
                 return operator.eq
             raise ValueError(f"Unknown flow share type: {flow_share_type}")

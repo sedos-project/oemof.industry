@@ -561,11 +561,21 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         def _emission_relation(block):
             for p, t in m.TIMEINDEX:
                 for n in group:
-                    for o, input_factors in n.emission_factors.items():
+                    for o, emissions in n.emission_factors.items():
                         rhs = m.flow[n, o, p, t]
                         lhs = 0
-                        for i, emission_factor in input_factors.items():
-                            lhs += m.flow[i, n, p, t] * emission_factor[t]
+                        for e, emission_factor in emissions.items():
+                            if e in n.input_groups:
+                                emitting_node = block.INPUT_GROUP_FLOW[n, e, p, t]
+                            elif e in n.output_groups:
+                                emitting_node = block.OUTPUT_GROUP_FLOW[n, e, p, t]
+                            elif e in n.inputs:
+                                emitting_node = m.flow[e, n, p, t]
+                            elif e in n.outputs:
+                                emitting_node = m.flow[n, e, p, t]
+                            else:
+                                KeyError(f"Emitting node '{e}' not found in inputs or outputs (including groups).")
+                            lhs += emitting_node * emission_factor[t]
                         block.emission_relation.add((n, o, p, t), lhs == rhs)
 
         self.emission_relation_build = BuildAction(rule=_emission_relation)

@@ -191,9 +191,12 @@ class MultiInputMultiOutputConverter(Node):
         if conversion_factors is None:
             conversion_factors = {}
         conversion_factors = {k: sequence(v) for k, v in conversion_factors.items()}
-        missing_conversion_factor_keys = (set(self.outputs) | set(self.inputs)) - set(
-            conversion_factors
-        )
+        missing_conversion_factor_keys = (
+            set(self.outputs)
+            | set(self.inputs)
+            | set(self.input_groups)
+            | set(self.output_groups)
+        ) - set(conversion_factors)
         for cf in missing_conversion_factor_keys:
             conversion_factors[cf] = sequence(1)
         return conversion_factors
@@ -441,7 +444,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             (n, i, p, t),
                             (
                                 block.INPUT_GROUP_FLOW[n, i, p, t]
+                                * n.conversion_factors[i][t]
                                 == block.INPUT_GROUP_FLOW[n, ii, p, t]
+                                * n.conversion_factors[ii][t]
                             ),
                         )
                     # Connect output groups
@@ -452,7 +457,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             (n, o, p, t),
                             (
                                 block.OUTPUT_GROUP_FLOW[n, o, p, t]
+                                * n.conversion_factors[o][t]
                                 == block.OUTPUT_GROUP_FLOW[n, oo, p, t]
+                                * n.conversion_factors[oo][t]
                             ),
                         )
                     # Connect input with output group:
@@ -463,7 +470,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                         (n, last_input, p, t),
                         (
                             block.INPUT_GROUP_FLOW[n, last_input, p, t]
+                            * n.conversion_factors[last_input][t]
                             == block.OUTPUT_GROUP_FLOW[n, last_output, p, t]
+                            * n.conversion_factors[last_output][t]
                         ),
                     )
 
@@ -574,7 +583,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             elif e in n.outputs:
                                 emitting_node = m.flow[n, e, p, t]
                             else:
-                                KeyError(f"Emitting node '{e}' not found in inputs or outputs (including groups).")
+                                KeyError(
+                                    f"Emitting node '{e}' not found in inputs or outputs (including groups)."
+                                )
                             lhs += emitting_node * emission_factor[t]
                         block.emission_relation.add((n, o, p, t), lhs == rhs)
 

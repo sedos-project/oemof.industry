@@ -740,3 +740,144 @@ def test_industry_component_IGFSCHMELZE00_LF():
     )
     # assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[4] == pytest.approx(0.0015, rel=1e-3)
     # assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[5] == pytest.approx(0.0011, rel=1e-3)
+
+
+def test_industry_component_CHPIFTGAS00():
+    idx = pd.date_range("1/1/2017", periods=3, freq="H")
+    es = EnergySystem(timeindex=idx)
+
+    # Buses
+    b_gas = Bus(label="INDGAS_OTH")
+    es.add(b_gas)
+    es.add(Source(label="gas_station", outputs={b_gas: Flow(variable_costs=1)}))
+
+    b_elec = Bus(label="IISELC-LB")
+    es.add(b_elec)
+    es.add(
+        Sink(
+            label="el_demand",
+            inputs={
+                b_elec: Flow(
+                    fix=[4.0842, 4.2743, 4.2743], nominal_value=1
+                )
+            },
+        )
+    )
+
+    b_heat = Bus(label="IFTHTH")
+    es.add(b_heat)
+    es.add(
+        Sink(
+            label="heat_demand",
+            inputs={
+                b_heat: Flow(
+                    fix=[6.8071, 7.124, 7.124], nominal_value=1
+                )
+            },
+        )
+    )
+
+    b_ch4 = Bus(label="INDCH4N", balanced=False)
+    es.add(b_ch4)
+
+    b_co2 = Bus(label="INDCO2N", balanced=False)
+    es.add(b_co2)
+
+    b_n2o = Bus(label="INDN2ON", balanced=False)
+    es.add(b_n2o)
+
+    es.add(
+        MultiInputMultiOutputConverter(
+            label="mimo",
+            inputs={b_gas: Flow()},
+            outputs={
+                "out": {
+                    b_elec: Flow(),
+                    b_heat: Flow(),
+                },
+                b_co2: Flow(),
+                b_ch4: Flow(),
+                b_n2o: Flow(),
+            },
+            emission_factors={
+                b_co2: {b_gas: 56},
+                b_ch4: {b_gas: 0.0008},
+                b_n2o: {b_gas: 0.0007},
+            },
+            conversion_factors={b_gas: 1 / 0.72},
+        )
+    )
+
+    # create an optimization problem and solve it
+    om = Model(es)
+    om.write("CHPIFTGAS00.lp", io_options={"symbolic_solver_labels": True})
+
+    # solve model
+    om.solve(solver="cbc")
+
+    # create result object
+    results = processing.convert_keys_to_strings(processing.results(om))
+
+    # INPUTS
+    # Gas
+    assert results[("INDGAS_OTH", "mimo")]["sequences"]["flow"].values[
+        0
+    ] == pytest.approx(15.1268, rel=1e-3)
+    assert results[("INDGAS_OTH", "mimo")]["sequences"]["flow"].values[
+        1
+    ] == pytest.approx(15.8311, rel=1e-3)
+    assert results[("INDGAS_OTH", "mimo")]["sequences"]["flow"].values[
+        2
+    ] == pytest.approx(15.8311, rel=1e-3)
+
+    # OUTPUTS
+    # Heat (Primary)
+    assert results[("mimo", "IFTHTH")]["sequences"]["flow"].values[0] == pytest.approx(
+        6.8071
+    )
+    assert results[("mimo", "IFTHTH")]["sequences"]["flow"].values[1] == pytest.approx(
+        7.124
+    )
+    assert results[("mimo", "IFTHTH")]["sequences"]["flow"].values[2] == pytest.approx(
+        7.124
+    )
+    # Electricity (Primary)
+    assert results[("mimo", "IISELC-LB")]["sequences"]["flow"].values[0] == pytest.approx(
+        4.0842
+    )
+    assert results[("mimo", "IISELC-LB")]["sequences"]["flow"].values[1] == pytest.approx(
+        4.2743
+    )
+    assert results[("mimo", "IISELC-LB")]["sequences"]["flow"].values[2] == pytest.approx(
+        4.2743
+    )
+    # CH4
+    assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[0] == pytest.approx(
+        0.0121, rel=1e-2
+    )
+    assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[1] == pytest.approx(
+        0.0127, rel=1e-2
+    )
+    assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[2] == pytest.approx(
+        0.0127, rel=1e-2
+    )
+    # CO2
+    assert results[("mimo", "INDCO2N")]["sequences"]["flow"].values[0] == pytest.approx(
+        847.099, rel=1e-3
+    )
+    assert results[("mimo", "INDCO2N")]["sequences"]["flow"].values[1] == pytest.approx(
+        886.54, rel=1e-3
+    )
+    assert results[("mimo", "INDCO2N")]["sequences"]["flow"].values[2] == pytest.approx(
+        886.54, rel=1e-3
+    )
+    # N2O
+    assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[0] == pytest.approx(
+        0.0106, rel=1e-2
+    )
+    assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[1] == pytest.approx(
+        0.0111, rel=1e-2
+    )
+    assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[2] == pytest.approx(
+        0.0111, rel=1e-2
+    )

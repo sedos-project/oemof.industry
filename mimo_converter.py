@@ -444,9 +444,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             (n, i, p, t),
                             (
                                 block.INPUT_GROUP_FLOW[n, i, p, t]
-                                * n.conversion_factors[i][t]
+                                / n.conversion_factors[i][t]
                                 == block.INPUT_GROUP_FLOW[n, ii, p, t]
-                                * n.conversion_factors[ii][t]
+                                / n.conversion_factors[ii][t]
                             ),
                         )
                     # Connect output groups
@@ -457,9 +457,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                             (n, o, p, t),
                             (
                                 block.OUTPUT_GROUP_FLOW[n, o, p, t]
-                                * n.conversion_factors[o][t]
+                                / n.conversion_factors[o][t]
                                 == block.OUTPUT_GROUP_FLOW[n, oo, p, t]
-                                * n.conversion_factors[oo][t]
+                                / n.conversion_factors[oo][t]
                             ),
                         )
                     # Connect input with output group:
@@ -470,9 +470,9 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                         (n, last_input, p, t),
                         (
                             block.INPUT_GROUP_FLOW[n, last_input, p, t]
-                            * n.conversion_factors[last_input][t]
+                            / n.conversion_factors[last_input][t]
                             == block.OUTPUT_GROUP_FLOW[n, last_output, p, t]
-                            * n.conversion_factors[last_output][t]
+                            / n.conversion_factors[last_output][t]
                         ),
                     )
 

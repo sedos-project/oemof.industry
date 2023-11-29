@@ -546,9 +546,7 @@ def test_industry_component_IGFSCHMELZE00_LF():
                 INDN2ON: {IGFGAS_LF: 0.0006, IGFHFO_LF: 0.0042},
             },
             conversion_factors={
-                IGFBGS_LF: 1 / 0.137,  # This is done, as efficiency cannot be set for commodity group by now!
-                IGFGAS_LF: 1 / 0.137,
-                IGFH2G_LF: 1 / 0.137,
+                "gas": 1 / 0.137,
                 IGFELC_LF: 3.3,
                 IGFHFO_LF: 0.7559,
             },
@@ -566,7 +564,6 @@ def test_industry_component_IGFSCHMELZE00_LF():
 
     # solve model
     om.solve(solver="cbc")
-    om.write("IGFSCHMELZE00_LF.lp", io_options={"symbolic_solver_labels": True})
 
     # create result object
     results = processing.convert_keys_to_strings(processing.results(om))

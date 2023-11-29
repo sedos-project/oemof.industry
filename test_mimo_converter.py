@@ -810,7 +810,6 @@ def test_industry_component_CHPIFTGAS00():
 
     # create an optimization problem and solve it
     om = Model(es)
-    om.write("CHPIFTGAS00.lp", io_options={"symbolic_solver_labels": True})
 
     # solve model
     om.solve(solver="cbc")

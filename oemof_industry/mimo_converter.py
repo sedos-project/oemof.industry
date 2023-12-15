@@ -123,8 +123,7 @@ class MultiInputMultiOutputConverter(Node):
         outputs=None,
         conversion_factors=None,
         emission_factors=None,
-        input_flow_shares=None,
-        output_flow_shares=None,
+        flow_shares=None,
         custom_attributes=None,
     ):
         self.label = label
@@ -162,10 +161,16 @@ class MultiInputMultiOutputConverter(Node):
 
         self.conversion_factors = self._init_conversion_factors(conversion_factors)
 
-        self._check_flow_shares(input_flow_shares)
-        self._check_flow_shares(output_flow_shares)
-        self.input_flow_shares = self._init_group(input_flow_shares)
-        self.output_flow_shares = self._init_group(output_flow_shares)
+        self._check_flow_shares(flow_shares)
+        flow_shares = self._init_group(flow_shares)
+        self.input_flow_shares = {
+            flow_type: {node: share for node, share in node_shares.items() if node in inputs}
+            for flow_type, node_shares in flow_shares.items()
+        }
+        self.output_flow_shares = {
+            flow_type: {node: share for node, share in node_shares.items() if node in outputs}
+            for flow_type, node_shares in flow_shares.items()
+        }
 
     def _init_conversion_factors(
         self, conversion_factors: Dict[Bus, Union[float, Iterable]]

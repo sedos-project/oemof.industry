@@ -24,22 +24,17 @@ SPDX-License-Identifier: MIT
 
 import operator
 from functools import reduce
-from typing import Dict
-from typing import Iterable
-from typing import Union
+from typing import Dict, Iterable, Union
 
 from oemof.network import Node
-from pyomo.core import BuildAction
-from pyomo.core import Constraint
-from pyomo.core.base.block import ScalarBlock
-from pyomo.environ import NonNegativeReals
-from pyomo.environ import Set
-from pyomo.environ import Var
-
 from oemof.solph._helpers import warn_if_missing_attribute
 from oemof.solph._plumbing import sequence
 from oemof.solph.buses import Bus
 from oemof.solph.flows import Flow
+from oemof.tabular._facade import Facade, dataclass_facade
+from pyomo.core import BuildAction, Constraint
+from pyomo.core.base.block import ScalarBlock
+from pyomo.environ import NonNegativeReals, Set, Var
 
 FLOW_SHARE_TYPES = ("min", "max", "fix")
 
@@ -590,3 +585,8 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                         block.emission_relation.add((n, o, p, t), lhs == rhs)
 
         self.emission_relation_build = BuildAction(rule=_emission_relation)
+
+
+@dataclass_facade
+class MIMO(MultiInputMultiOutputConverter, Facade):
+    """Facade for MIMO component"""

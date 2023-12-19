@@ -806,7 +806,7 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
                 b_ch4: {"out": 0.0017},
                 b_n2o: {"out": 0.0031},
             },
-            conversion_factors={"out": 0.46},
+            conversion_factors={"out": [0.455, 0.46, 0.46, 0.46, 0.46, 0.46]},
             flow_shares={"fix": {b_hydro: [0.5, 1, 1, 1, 1, 1]}},
         )
     )

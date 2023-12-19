@@ -840,7 +840,7 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
         5
     ] == pytest.approx(0)
-    Hydro
+    # Hydro
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
         0
     ] == pytest.approx(5.4945)  # todo actual 9.8561538

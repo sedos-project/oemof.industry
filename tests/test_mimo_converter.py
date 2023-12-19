@@ -824,7 +824,7 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
     # # Gas
     # assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
     #     0
-    # ] == pytest.approx(5.4945)
+    # ] == pytest.approx(5.4945)  # todo acutal 9.8561538
     # assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
     #     1
     # ] == pytest.approx(0)
@@ -843,22 +843,22 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
     # # Hydro
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     0
-    # ] == pytest.approx(5.4945)
+    # ] == pytest.approx(5.4945)  # todo actual 9.8561538
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     1
-    # ] == pytest.approx(10.8696)
+    # ] == pytest.approx(10.8696)  # todo actual 19.29913
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     2
-    # ] == pytest.approx(10.8696)
+    # ] == pytest.approx(10.8696)  # todo actual 19.29913
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     3
-    # ] == pytest.approx(10.8696)
+    # ] == pytest.approx(10.8696)  # todo actual 19.29913
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     4
-    # ] == pytest.approx(10.8696)
+    # ] == pytest.approx(10.8696)  # todo actual 19.29913
     # assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
     #     5
-    # ] == pytest.approx(10.8696)
+    # ] == pytest.approx(10.8696)  # todo actual 19.29913
 
     # OUTPUTS
     # Heat (Primary)

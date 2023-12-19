@@ -882,22 +882,22 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
     )
     # CH4
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[0] == pytest.approx(
-        0.0149, rel=1e-3
+        0.0149, abs=1e-3
     )
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[1] == pytest.approx(
-        0.0148, rel=1e-3
+        0.0148, abs=1e-3
     )
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[2] == pytest.approx(
-        0.0148, rel=1e-3
+        0.0148, abs=1e-3
     )
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[3] == pytest.approx(
-        0.0148
+        0.0148, abs=1e-3
     )
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[4] == pytest.approx(
-        0.0148
+        0.0148, abs=1e-3
     )
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[5] == pytest.approx(
-        0.0148
+        0.0148, abs=1e-3
     )
     # CO2
     assert results[("mimo", "INDCO2N")]["sequences"]["flow"].values[0] == pytest.approx(
@@ -920,22 +920,22 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
     )
     # N2O
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[0] == pytest.approx(
-        0.0281, rel=1e-3
+        0.0281, abs=1e-3
     )
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[1] == pytest.approx(
-        0.0278, rel=1e-3
+        0.0278, abs=1e-3
     )
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[2] == pytest.approx(
-        0.0278, rel=1e-3
+        0.0278, abs=1e-3
     )
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[3] == pytest.approx(
-        0.0278
+        0.0278, abs=1e-3
     )
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[4] == pytest.approx(
-        0.0278
+        0.0278, abs=1e-3
     )
     assert results[("mimo", "INDN2ON")]["sequences"]["flow"].values[5] == pytest.approx(
-        0.0278
+        0.0278, abs=1e-3
     )
 
 

@@ -1,2 +1,2 @@
-type,name,region,year,carrier,tech,from_bus_0,from_bus_1,to_bus_0
-mimo,DE_carrier_tech_1,DE,2021,exo_steel,mimo,electricity,sec_coke_oven_gas,exo_steel
+type;name;region;year;carrier;tech;from_bus_0;from_bus_1;to_bus_0;group_0;
+mimo;DE_carrier_tech_1;DE;2021;exo_steel;mimo;electricity;sec_coke_oven_gas;exo_steel;{"gas": ["electricity", "sec_coke_oven_gas"]}

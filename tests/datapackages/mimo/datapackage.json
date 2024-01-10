@@ -249,6 +249,11 @@
                         "name": "to_bus_0",
                         "type": "string",
                         "format": "default"
+                    },
+                    {
+                        "name": "group_0",
+                        "type": "object",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [

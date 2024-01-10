@@ -1,0 +1,2 @@
+type;carrier;marginal_cost;name;region;year;bus;amount
+commodity;carrier;0.13;DE_carrier_tech_5;DE;2021;iip_steel_crudesteel;100000

@@ -1,0 +1,2 @@
+type;carrier;tech;marginal_cost;name;region;year;from_bus;to_bus
+conversion;carrier;tech;0.5;DE_carrier_tech_3;DE;2021;ch4;electricity

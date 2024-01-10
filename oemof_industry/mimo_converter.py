@@ -21,7 +21,7 @@ SPDX-FileCopyrightText: Hendrik Huyskens <hendrik.huyskens@rl-institut.de>
 SPDX-License-Identifier: MIT
 
 """
-
+import dataclasses
 import operator
 from functools import reduce
 from typing import Dict, Iterable, Union
@@ -125,6 +125,7 @@ class MultiInputMultiOutputConverter(Node):
         emission_factors=None,
         flow_shares=None,
         custom_attributes=None,
+        **kwargs
     ):
         self.label = label
 
@@ -164,11 +165,15 @@ class MultiInputMultiOutputConverter(Node):
         self._check_flow_shares(flow_shares)
         flow_shares = self._init_group(flow_shares)
         self.input_flow_shares = {
-            flow_type: {node: share for node, share in node_shares.items() if node in inputs}
+            flow_type: {
+                node: share for node, share in node_shares.items() if node in inputs
+            }
             for flow_type, node_shares in flow_shares.items()
         }
         self.output_flow_shares = {
-            flow_type: {node: share for node, share in node_shares.items() if node in outputs}
+            flow_type: {
+                node: share for node, share in node_shares.items() if node in outputs
+            }
             for flow_type, node_shares in flow_shares.items()
         }
 
@@ -592,6 +597,22 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         self.emission_relation_build = BuildAction(rule=_emission_relation)
 
 
-@dataclass_facade
+@dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
     """Facade for MIMO component"""
+
+    carrier: str
+    tech: str
+
+    def __init__(self, **kwargs):
+        inputs = {}
+        outputs = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("from_bus"):
+                inputs[value] = Flow()
+                kwargs.pop(key)
+            if key.startswith("to_bus"):
+                outputs[value] = Flow()
+                kwargs.pop(key)
+
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)

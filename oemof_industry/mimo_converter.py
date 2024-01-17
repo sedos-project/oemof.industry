@@ -625,9 +625,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         pass
                 # todo check that len(group_dict) == len(list(value.values())[0]). otherwise raise error
                 # add multiple input/output to inputs/outputs variable
-                if input_output is "input":  # todo nicer (see above)
+                if input_output == "input":  # todo nicer (see above)
                     inputs[list(value.keys())[0]] = group_dict
-                elif input_output is "output":
+                elif input_output == "output":
                     outputs[list(value.keys())[0]] = group_dict
                 kwargs.pop(key)
 

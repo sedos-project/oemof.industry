@@ -607,11 +607,36 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     def __init__(self, **kwargs):
         inputs = {}
         outputs = {}
+
+        # at first add multiple inputs/outputs according to groups
+        for key, value in list(kwargs.items()):
+            if key.startswith("group"):
+                group_dict = {}
+                for key_2, value_2 in list(kwargs.items()):
+                    try:
+                        if value_2.label in list(value.values())[0]:  # todo check: is double list, check csv list reading
+                            group_dict.update({value_2: Flow()})
+                            kwargs.pop(key_2)
+                            if key_2.startswith("from_bus"):  # todo: nicer
+                                input_output = "input"
+                            elif key_2.startswith("to_bus"):
+                                input_output = "output"
+                    except:
+                        pass
+                # todo check that len(group_dict) == len(list(value.values())[0]). otherwise raise error
+                # add multiple input/output to inputs/outputs variable
+                if input_output is "input":  # todo nicer (see above)
+                    inputs[list(value.keys())[0]] = group_dict
+                elif input_output is "output":
+                    outputs[list(value.keys())[0]] = group_dict
+                kwargs.pop(key)
+
+        # add remaining, single inputs and outputs
         for key, value in list(kwargs.items()):
             if key.startswith("from_bus"):
                 inputs[value] = Flow()
                 kwargs.pop(key)
-            if key.startswith("to_bus"):
+            elif key.startswith("to_bus"):
                 outputs[value] = Flow()
                 kwargs.pop(key)
 

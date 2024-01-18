@@ -15,7 +15,7 @@ from oemof.solph.components import Sink
 from oemof.solph.components import Source
 from oemof.solph.flows import Flow
 
-from mimo_converter import MultiInputMultiOutputConverter
+from oemof_industry.mimo_converter import MultiInputMultiOutputConverter
 
 
 def test_invalid_flow_shares():
@@ -27,7 +27,7 @@ def test_invalid_flow_shares():
             label="mimo",
             inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
             outputs={b_electricity: Flow()},
-            input_flow_shares={"maxx": {b_gas: 0.4}},
+            flow_shares={"maxx": {b_gas: 0.4}},
         )
 
     with pytest.raises(
@@ -41,7 +41,7 @@ def test_invalid_flow_shares():
             label="mimo",
             inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
             outputs={b_electricity: Flow()},
-            input_flow_shares={"min": {b_gas: 0.4}, "fix": {b_gas: 0.4}},
+            flow_shares={"min": {b_gas: 0.4}, "fix": {b_gas: 0.4}},
         )
 
     with pytest.raises(
@@ -55,7 +55,7 @@ def test_invalid_flow_shares():
             label="mimo",
             inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
             outputs={b_electricity: Flow()},
-            input_flow_shares={"max": {b_gas: 0.4}, "fix": {b_gas: 0.4}},
+            flow_shares={"max": {b_gas: 0.4}, "fix": {b_gas: 0.4}},
         )
 
 
@@ -154,8 +154,7 @@ def test_flow_shares():
                 "heat": {b_heat: Flow(), b_heat_low: Flow()},
             },
             conversion_factors={b_gas: 1.2, b_hydro: 1.3},
-            input_flow_shares={"fix": {b_gas: [0.8, 0.3]}},
-            output_flow_shares={"fix": {b_heat: 0.8}},
+            flow_shares={"fix": {b_gas: [0.8, 0.3], b_heat: 0.8}},
         )
     )
 
@@ -232,8 +231,7 @@ def test_emissions():
                 b_ch4: {b_gas: 0.4, b_hydro: 0.2},
             },
             conversion_factors={b_gas: 1.2, b_hydro: 1.3},
-            input_flow_shares={"fix": {b_gas: [0.8, 0.3]}},
-            output_flow_shares={"fix": {b_heat_low: 0.2}},
+            flow_shares={"fix": {b_gas: [0.8, 0.3], b_heat_low: 0.2}},
         )
     )
 
@@ -327,7 +325,7 @@ def test_industry_component_INDIFTHTHGAS00():
                 b_n2o: {b_gas: 0.0006},
             },
             conversion_factors={"in": 1 / 0.82},
-            input_flow_shares={"max": {b_hydro: [0, 0, 0, 0.5, 1, 1]}},
+            flow_shares={"max": {b_hydro: [0, 0, 0, 0.5, 1, 1]}},
         )
     )
 
@@ -550,7 +548,7 @@ def test_industry_component_IGFSCHMELZE00_LF():
                 IGFELC_LF: 3.3,
                 IGFHFO_LF: 0.7559,
             },
-            input_flow_shares={
+            flow_shares={
                 "max": {
                     IGFBGS_LF: [0, 0, 0, 0.5, 1, 1],
                     IGFH2G_LF: [0, 0, 0, 0.5, 1, 1],
@@ -809,7 +807,7 @@ def test_industry_component_IIS_CHPSTMGAS101_LB():
                 b_n2o: {"out": 0.0031},
             },
             conversion_factors={"out": 0.455},
-            input_flow_shares={"max": {b_hydro: [0.5, 1, 1, 1, 1, 1]}},
+            flow_shares={"max": {b_hydro: [0.5, 1, 1, 1, 1, 1]}},
         )
     )
 

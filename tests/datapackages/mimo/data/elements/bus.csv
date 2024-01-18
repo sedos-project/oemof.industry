@@ -1,0 +1,7 @@
+name;type;balanced
+ch4;bus;True
+electricity;bus;True
+sec_coke_oven_gas;bus;True
+iip_steel_crudesteel;bus;True
+sec_H2;bus;True
+exo_steel;bus;True

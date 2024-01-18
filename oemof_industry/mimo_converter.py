@@ -21,25 +21,20 @@ SPDX-FileCopyrightText: Hendrik Huyskens <hendrik.huyskens@rl-institut.de>
 SPDX-License-Identifier: MIT
 
 """
-
+import dataclasses
 import operator
 from functools import reduce
-from typing import Dict
-from typing import Iterable
-from typing import Union
+from typing import Dict, Iterable, Union
 
 from oemof.network import Node
-from pyomo.core import BuildAction
-from pyomo.core import Constraint
-from pyomo.core.base.block import ScalarBlock
-from pyomo.environ import NonNegativeReals
-from pyomo.environ import Set
-from pyomo.environ import Var
-
 from oemof.solph._helpers import warn_if_missing_attribute
 from oemof.solph._plumbing import sequence
 from oemof.solph.buses import Bus
 from oemof.solph.flows import Flow
+from oemof.tabular._facade import Facade, dataclass_facade
+from pyomo.core import BuildAction, Constraint
+from pyomo.core.base.block import ScalarBlock
+from pyomo.environ import NonNegativeReals, Set, Var
 
 FLOW_SHARE_TYPES = ("min", "max", "fix")
 
@@ -128,9 +123,9 @@ class MultiInputMultiOutputConverter(Node):
         outputs=None,
         conversion_factors=None,
         emission_factors=None,
-        input_flow_shares=None,
-        output_flow_shares=None,
+        flow_shares=None,
         custom_attributes=None,
+        **kwargs
     ):
         self.label = label
 
@@ -167,10 +162,20 @@ class MultiInputMultiOutputConverter(Node):
 
         self.conversion_factors = self._init_conversion_factors(conversion_factors)
 
-        self._check_flow_shares(input_flow_shares)
-        self._check_flow_shares(output_flow_shares)
-        self.input_flow_shares = self._init_group(input_flow_shares)
-        self.output_flow_shares = self._init_group(output_flow_shares)
+        self._check_flow_shares(flow_shares)
+        flow_shares = self._init_group(flow_shares)
+        self.input_flow_shares = {
+            flow_type: {
+                node: share for node, share in node_shares.items() if node in inputs
+            }
+            for flow_type, node_shares in flow_shares.items()
+        }
+        self.output_flow_shares = {
+            flow_type: {
+                node: share for node, share in node_shares.items() if node in outputs
+            }
+            for flow_type, node_shares in flow_shares.items()
+        }
 
     def _init_conversion_factors(
         self, conversion_factors: Dict[Bus, Union[float, Iterable]]
@@ -590,3 +595,24 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                         block.emission_relation.add((n, o, p, t), lhs == rhs)
 
         self.emission_relation_build = BuildAction(rule=_emission_relation)
+
+
+@dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
+class MIMO(MultiInputMultiOutputConverter, Facade):
+    """Facade for MIMO component"""
+
+    carrier: str
+    tech: str
+
+    def __init__(self, **kwargs):
+        inputs = {}
+        outputs = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("from_bus"):
+                inputs[value] = Flow()
+                kwargs.pop(key)
+            if key.startswith("to_bus"):
+                outputs[value] = Flow()
+                kwargs.pop(key)
+
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)

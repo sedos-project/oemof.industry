@@ -338,6 +338,16 @@
                         "name": "to_bus",
                         "type": "string",
                         "format": "default"
+                    },
+                    {
+                        "name": "efficiency",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor",
+                        "type": "number",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [

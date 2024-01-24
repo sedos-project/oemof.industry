@@ -266,6 +266,21 @@
                         "format": "default"
                     },
                     {
+                        "name": "to_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_3",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
                         "name": "group_0",
                         "type": "object",
                         "format": "default"
@@ -327,6 +342,27 @@
                     },
                     {
                         "fields": "to_bus_0",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_2",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_3",
                         "reference": {
                             "fields": "name",
                             "resource": "bus"

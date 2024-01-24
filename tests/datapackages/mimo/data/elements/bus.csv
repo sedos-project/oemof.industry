@@ -5,3 +5,6 @@ sec_coke_oven_gas;bus;True
 iip_steel_crudesteel;bus;True
 sec_H2;bus;True
 exo_steel;bus;True
+co2_em;bus;False
+ch4_em;bus;False
+no2_em;bus;False

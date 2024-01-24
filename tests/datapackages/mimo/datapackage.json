@@ -246,6 +246,21 @@
                         "format": "default"
                     },
                     {
+                        "name": "from_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_3",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_4",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
                         "name": "to_bus_0",
                         "type": "string",
                         "format": "default"
@@ -253,6 +268,21 @@
                     {
                         "name": "group_0",
                         "type": "object",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_sec_coke_oven_gas",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_electricity",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_gas",
+                        "type": "number",
                         "format": "default"
                     }
                 ],
@@ -269,6 +299,27 @@
                     },
                     {
                         "fields": "from_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_2",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_3",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_4",
                         "reference": {
                             "fields": "name",
                             "resource": "bus"

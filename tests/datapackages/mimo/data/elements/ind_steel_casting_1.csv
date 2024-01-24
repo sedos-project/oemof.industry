@@ -1,2 +1,2 @@
-type;name;region;year;carrier;tech;from_bus_0;from_bus_1;to_bus_0;group_0
-mimo;DE_carrier_tech_1;DE;2021;exo_steel;mimo;electricity;sec_coke_oven_gas;exo_steel;{"gas": ["electricity", "sec_coke_oven_gas"]}
+type;name;region;year;carrier;tech;from_bus_0;from_bus_1;from_bus_2;from_bus_3;from_bus_4;to_bus_0;group_0;efficiency_sec_coke_oven_gas;efficiency_electricity;efficiency_gas
+mimo;DE_carrier_tech_1;DE;2021;exo_steel;mimo;electricity;sec_coke_oven_gas;iip_steel_crudesteel;sec_H2;ch4;exo_steel;{"gas": ["sec_H2", "ch4"]};2.2;0.3;5

@@ -607,6 +607,8 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     def __init__(self, **kwargs):
         inputs = {}
         outputs = {}
+        conversion_factors = {}
+        busses = []
 
         # at first add multiple inputs/outputs according to groups
         for key, value in list(kwargs.items()):
@@ -617,6 +619,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         if value_2.label in list(value.values())[0]:  # todo check: is double list, check csv list reading
                             group_dict.update({value_2: Flow()})
                             kwargs.pop(key_2)
+                            busses.append(value_2)  # needed for efficiency
                             if key_2.startswith("from_bus"):  # todo: nicer
                                 input_output = "input"
                             elif key_2.startswith("to_bus"):
@@ -631,13 +634,26 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     outputs[list(value.keys())[0]] = group_dict
                 kwargs.pop(key)
 
-        # add remaining, single inputs and outputs
-        for key, value in list(kwargs.items()):
-            if key.startswith("from_bus"):
-                inputs[value] = Flow()
-                kwargs.pop(key)
-            elif key.startswith("to_bus"):
-                outputs[value] = Flow()
-                kwargs.pop(key)
+        # add remaining, single inputs and outputs, and other parameters
+        for key_3, value_3 in list(kwargs.items()):
+            if key_3.startswith("from_bus"):
+                inputs[value_3] = Flow()
+                kwargs.pop(key_3)
+                busses.append(value_3)  # needed for efficiency
+            elif key_3.startswith("to_bus"):
+                outputs[value_3] = Flow()
+                kwargs.pop(key_3)
+                busses.append(value_3)  # needed for efficiency
+            elif key_3.startswith("efficiency"):
+                # add bus or group to conversion_factors
+                suffix ="_".join(key_3.split("_")[1:])
+                # search bus, if bus does not exist: it's a group name
+                bus = [bus for bus in busses if bus.label == suffix]
+                if bus:
+                    conversion_factors[bus[0]] = value_3
+                else:
+                    # it's a group
+                    conversion_factors[suffix] = value_3
+                kwargs.pop(key_3)
 
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, **kwargs)

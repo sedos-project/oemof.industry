@@ -7,4 +7,4 @@ sec_H2;bus;True
 exo_steel;bus;True
 co2_em;bus;False
 ch4_em;bus;False
-no2_em;bus;False
+n2o_em;bus;False

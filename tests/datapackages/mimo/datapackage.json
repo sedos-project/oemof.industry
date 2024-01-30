@@ -299,6 +299,26 @@
                         "name": "efficiency_gas",
                         "type": "number",
                         "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_ch4_co2_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_sec_coke_oven_gas_co2_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_gas_ch4_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_exo_steel_ch4_em",
+                        "type": "number",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [

@@ -608,7 +608,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         inputs = {}
         outputs = {}
         conversion_factors = {}
+        emission_factors = {}
         busses = {}
+        groups = {}
 
         # get all busses for later processing
         for key, value in list(kwargs.items()):
@@ -639,6 +641,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 elif input_output == "to_bus":
                     outputs[list(value_1.keys())[0]] = group_dict
                 kwargs.pop(key_1)
+                groups.update(value_1)
 
         # add remaining, single inputs and outputs, and other parameters
         for key_2, value_2 in list(kwargs.items()):
@@ -659,5 +662,36 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     # it's a group
                     conversion_factors[suffix] = value_2
                 kwargs.pop(key_2)
+            elif key_2.startswith("emission_factor"):
+                # search from_bus in `busses` and `groups` and write from_bus / to_bus options in dict
+                suffixes = key_2.split("_")[2:]
+                bus_options = {}
+                for i in range(len(suffixes)):
+                    part = "_".join(suffixes[:i+1])
+                    bus = [bus for bus in busses.items() if bus[1].label == part]
+                    group = [group for group in groups if group == part]
+                    if bus:
+                        to_bus_name = "_".join(suffixes[i+1:])
+                        bus_options.update({bus[0][1]: to_bus_name})
+                    if group:
+                        to_bus_name = "_".join(suffixes[i + 1:])
+                        bus_options.update({group[0]: to_bus_name})
+                # search to_bus in `busses` and `groups` for all combinations and update in dict
+                bus_combinations = {}  # todo tuples instead?
+                for from_bus, to_bus_name in list(bus_options.items()):
+                    bus = [bus for bus in busses.items() if bus[1].label == to_bus_name]
+                    group = [group for group in groups if group == to_bus_name]
+                    if bus:
+                        bus_combinations.update({from_bus: bus[0][1]})
+                    if group:
+                        bus_combinations.update({from_bus: group[0]})
 
-        super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, **kwargs)
+                if len(bus_combinations) == 0:
+                    pass  # todo raise error
+                elif len(bus_combinations) > 1:
+                    pass  # todo raise error
+                else:
+                    emission_factors[list(bus_combinations.values())[0]] = {from_bus: value_2}
+                    kwargs.pop(key_2)
+
+        super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, emission_factors=emission_factors, **kwargs)

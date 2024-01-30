@@ -652,9 +652,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 outputs[value_2] = Flow()
                 kwargs.pop(key_2)
             elif key_2.startswith("efficiency"):
-                # add bus or group to conversion_factors
+                # get bus or group name
                 suffix ="_".join(key_2.split("_")[1:])
-                # search bus, if bus does not exist: it's a group name
+                # search bus, if bus does not exist: suffix is a group name
                 bus = [bus for bus in busses.items() if bus[1].label == suffix]
                 if bus:
                     conversion_factors[bus[0][1]] = value_2
@@ -685,7 +685,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         bus_combinations.update({from_bus: bus[0][1]})
                     if group:
                         bus_combinations.update({from_bus: group[0]})
-
+                # add emission factors and raise error if there is more than one combination of bus/group names found
                 if len(bus_combinations) == 1:
                     emission_factors.update({list(bus_combinations.values())[0]: {list(bus_combinations.keys())[0]: value_2}})
                     kwargs.pop(key_2)

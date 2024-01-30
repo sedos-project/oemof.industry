@@ -687,7 +687,10 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         bus_combinations.update({from_bus: group[0]})
                 # add emission factors and raise error if there is more than one combination of bus/group names found
                 if len(bus_combinations) == 1:
-                    emission_factors.update({list(bus_combinations.values())[0]: {list(bus_combinations.keys())[0]: value_2}})
+                    try:
+                        emission_factors[list(bus_combinations.values())[0]].update({list(bus_combinations.keys())[0]: value_2})
+                    except KeyError:
+                        emission_factors[list(bus_combinations.values())[0]] = {list(bus_combinations.keys())[0]: value_2}
                     kwargs.pop(key_2)
                 if len(bus_combinations) == 0:
                     pass  # todo raise error

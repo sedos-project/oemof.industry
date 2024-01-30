@@ -686,12 +686,12 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     if group:
                         bus_combinations.update({from_bus: group[0]})
 
+                if len(bus_combinations) == 1:
+                    emission_factors.update({list(bus_combinations.values())[0]: {list(bus_combinations.keys())[0]: value_2}})
+                    kwargs.pop(key_2)
                 if len(bus_combinations) == 0:
                     pass  # todo raise error
                 elif len(bus_combinations) > 1:
                     pass  # todo raise error
-                else:
-                    emission_factors[list(bus_combinations.values())[0]] = {from_bus: value_2}
-                    kwargs.pop(key_2)
 
         super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, emission_factors=emission_factors, **kwargs)

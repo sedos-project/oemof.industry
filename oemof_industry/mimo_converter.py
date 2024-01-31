@@ -628,17 +628,18 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 group_busses = [bus for bus in busses.items() if bus[1].label in bus_names]
                 # get bus info: input or output
                 keys = list(dict.fromkeys(dict(group_busses)))
-                input_output = list(dict.fromkeys(["_".join(key.split("_")[:2]) for key in keys]))
+                directions = ["_".join(key.split("_")[:1]) for key in keys]
+                direction = list(dict.fromkeys(directions))
                 # checks
                 if not len(bus_names) == len(group_busses):
                     pass  # todo raise error if a bus_name not in busses
-                if len(input_output) > 1:
+                if len(direction) > 1:
                     pass  # todo raise error if busses of group are a mix of input and output busses
                 # add multiple input/output to inputs or outputs
                 group_dict = {bus[1]: Flow() for bus in group_busses}
-                if input_output[0] == "from_bus":
+                if direction[0] == "from":
                     inputs[list(value_1.keys())[0]] = group_dict
-                elif input_output == "to_bus":
+                elif direction == "to":
                     outputs[list(value_1.keys())[0]] = group_dict
                 kwargs.pop(key_1)
                 groups.update(value_1)
@@ -687,10 +688,12 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         bus_combinations.update({from_bus: group[0]})
                 # add emission factors and raise error if there is more than one combination of bus/group names found
                 if len(bus_combinations) == 1:
+                    from_bus = list(bus_combinations.keys())[0]  # todo cehck variables
+                    to_bus = list(bus_combinations.values())[0]
                     try:
-                        emission_factors[list(bus_combinations.values())[0]].update({list(bus_combinations.keys())[0]: value_2})
+                        emission_factors[to_bus].update({from_bus: value_2})
                     except KeyError:
-                        emission_factors[list(bus_combinations.values())[0]] = {list(bus_combinations.keys())[0]: value_2}
+                        emission_factors[to_bus] = {from_bus: value_2}
                     kwargs.pop(key_2)
                 if len(bus_combinations) == 0:
                     pass  # todo raise error

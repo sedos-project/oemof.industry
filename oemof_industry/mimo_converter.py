@@ -626,7 +626,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 # get the group's busses
                 bus_names = list(value_1.values())[0]  # todo check: is double list, check csv list reading
                 group_busses = [bus for bus in busses.items() if bus[1].label in bus_names]
-                # get bus info: input or output
+                # get bus direction: input or output (from/to)
                 keys = list(dict.fromkeys(dict(group_busses)))
                 directions = ["_".join(key.split("_")[:1]) for key in keys]
                 direction = list(dict.fromkeys(directions))
@@ -635,7 +635,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     pass  # todo raise error if a bus_name not in busses
                 if len(direction) > 1:
                     pass  # todo raise error if busses of group are a mix of input and output busses
-                # add multiple input/output to inputs or outputs
+                # add multiple input/output to `inputs` or `outputs`
                 group_dict = {bus[1]: Flow() for bus in group_busses}
                 if direction[0] == "from":
                     inputs[list(value_1.keys())[0]] = group_dict
@@ -677,7 +677,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     if group:
                         to_bus_name = "_".join(suffixes[i + 1:])
                         bus_options.update({group[0]: to_bus_name})
-                # search to_bus in `busses` and `groups` for all combinations and update in dict
+                # search to_bus in `busses` and `groups` for all combinations and write to new dict
                 bus_combinations = {}  # todo tuples instead?
                 for from_bus, to_bus_name in list(bus_options.items()):
                     bus = [bus for bus in busses.items() if bus[1].label == to_bus_name]
@@ -691,8 +691,10 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     from_bus = list(bus_combinations.keys())[0]  # todo cehck variables
                     to_bus = list(bus_combinations.values())[0]
                     try:
+                        # entry already exists and is updated
                         emission_factors[to_bus].update({from_bus: value_2})
                     except KeyError:
+                        # add new entry for `to_bus`
                         emission_factors[to_bus] = {from_bus: value_2}
                     kwargs.pop(key_2)
                 if len(bus_combinations) == 0:

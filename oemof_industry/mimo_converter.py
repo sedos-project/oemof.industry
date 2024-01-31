@@ -697,7 +697,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         # add new entry for `to_bus`
                         emission_factors[to_bus] = {from_bus: value_2}
                     kwargs.pop(key_2)
-                if len(bus_combinations) == 0:
+                elif len(bus_combinations) == 0:
                     pass  # todo raise error
                 elif len(bus_combinations) > 1:
                     pass  # todo raise error

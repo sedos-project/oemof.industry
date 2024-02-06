@@ -121,7 +121,6 @@ class MultiInputMultiOutputConverter(Node):
         label=None,
         inputs=None,
         outputs=None,
-        primary: str = None,
         conversion_factors=None,
         emission_factors=None,
         flow_shares=None,
@@ -152,11 +151,10 @@ class MultiInputMultiOutputConverter(Node):
         outputs = reduce(operator.ior, self.output_groups.values(), {}) | emissions
 
         # If primary is not set, define it as first output, otherwise search for primary string in inputs and outputs
-        self.primary: Bus = (
-            list(outputs.keys())[0]
-            if primary is None
-            else next(bus for bus in (inputs | outputs).keys() if bus.label == primary)
-        )
+        buses_holding_investment = [bus for bus, flow in (inputs | outputs).items() if flow.investment is not None]
+        if len(buses_holding_investment) > 1:
+            raise ValueError("Only one investment allowed.")
+        self.primary_bus = buses_holding_investment[0] if len(buses_holding_investment) == 1 else None
 
         if custom_attributes is None:
             custom_attributes = {}
@@ -449,18 +447,20 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         def _maximum_input_output_group_relation(block):
             for p, t in m.TIMEINDEX:
                 for n in group:
-                    if n.primary in n.inputs:
+                    if n.primary_bus is None:
+                        continue
+                    if n.primary_bus in n.inputs:
                         g = list(n.input_groups)[0]
                         lhs = block.INPUT_GROUP_FLOW[n, g, p, t]
                         try:
-                            rhs = m.InvestmentFlowBlock.total[n.primary, n, p]
+                            rhs = m.InvestmentFlowBlock.total[n.primary_bus, n, p]
                         except (AttributeError, KeyError):
                             continue
                     else:
                         g = list(n.output_groups)[0]
                         lhs = block.OUTPUT_GROUP_FLOW[n, g, p, t]
                         try:
-                            rhs = m.InvestmentFlowBlock.total[n, n.primary, p]
+                            rhs = m.InvestmentFlowBlock.total[n, n.primary_bus, p]
                         except (AttributeError, KeyError):
                             # AttributeError is thrown in case of no InvestmentFlowBlock in whole ES,
                             # KeyError is thrown if primary flow has no investment

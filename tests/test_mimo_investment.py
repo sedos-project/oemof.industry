@@ -5,12 +5,33 @@ Example that illustrates how to use component `MultiInputMultiOutputConverter`.
 SPDX-License-Identifier: MIT
 """
 import pandas as pd
+import pytest
 from oemof.solph import EnergySystem, Investment, Model, processing
 from oemof.solph.buses import Bus
 from oemof.solph.components import Sink, Source
 from oemof.solph.flows import Flow
 
 from oemof_industry.mimo_converter import MultiInputMultiOutputConverter
+
+
+def test_too_many_investments():
+    b_gas = Bus(label="gas")
+    b_hydro = Bus(label="hydro")
+    b_electricity = Bus(label="electricity", balanced=False)
+    b_heat = Bus(label="heat", balanced=True)
+    b_heat_low = Bus(label="heat_low", balanced=False)
+
+    with pytest.raises(ValueError, match="Only one investment allowed."):
+        MultiInputMultiOutputConverter(
+            label="mimo",
+            inputs={"in": {b_gas: Flow(nominal_value=Investment(ep_costs=1.2, maximum=20)), b_hydro: Flow()}},
+            outputs={
+                b_electricity: Flow(nominal_value=Investment(ep_costs=1.2, maximum=20)),
+                "heat": {b_heat: Flow(), b_heat_low: Flow()},
+            },
+            conversion_factors={b_gas: 1.2, b_hydro: 1.3, b_heat: 1.2},
+            flow_shares={"fix": {b_gas: [0.8, 0.3], b_heat: 0.8}},
+        )
 
 
 def test_investment_fix_outputs():

@@ -7,9 +7,7 @@ SPDX-License-Identifier: MIT
 import pandas as pd
 import pytest
 
-from oemof.solph import EnergySystem
-from oemof.solph import Model
-from oemof.solph import processing
+from oemof.solph import EnergySystem, Model, Investment, processing
 from oemof.solph.buses import Bus
 from oemof.solph.components import Sink
 from oemof.solph.components import Source
@@ -124,7 +122,7 @@ def test_flow_shares():
     # resources
     b_gas = Bus(label="gas")
     es.add(b_gas)
-    es.add(Source(label="gas_station", outputs={b_gas: Flow(variable_costs=20)}))
+    es.add(Source(label="gas_station", outputs={b_gas: Flow(nominal_value=Investment(ep_costs=1), variable_costs=20)}))
 
     b_hydro = Bus(label="hydro")
     es.add(b_hydro)

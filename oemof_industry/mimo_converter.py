@@ -76,6 +76,8 @@ class MultiInputMultiOutputConverter(Node):
         individual flow shares for each time step. If no flow share is given
         for an input flow, no share is set for this flow.
 
+    # todo: update parameter list
+
     Examples
     --------
     Defining a MIMO-converter:
@@ -428,7 +430,7 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
             rule=_output_group_relation,
         )
 
-        self.input_output_group_relation = Constraint(
+        self.input_output_group_relation = Constraint(   # todo: WARNING Element (MIMO(carrier='exo_steel', tech='mimo'), 'group_0', 0, 8754) already exists in Set OrderedScalarSet; no action taken
             [
                 (n, g, p, t)
                 for p, t in m.TIMEINDEX
@@ -599,7 +601,21 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
 @dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
-    """Facade for MIMO component"""
+    """ Facade for MIMO component.
+
+    Pre-inits mimo specific parameters and drops them from `kwargs`: busses,
+    conversion_factors, emission_factors, and flow_shares.
+
+    # todo naming convention for parameters (keys in csv) is required. Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
+
+    Parameters
+    ----------
+    carrier :
+
+    tech :
+
+
+    """
 
     carrier: str
     tech: str

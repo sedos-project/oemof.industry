@@ -319,6 +319,16 @@
                         "name": "emission_factor_exo_steel_ch4_em",
                         "type": "number",
                         "format": "default"
+                    },
+                    {
+                        "name": "flow_share_max_ch4",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "flow_share_fix_sec_H2",
+                        "type": "string",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [
@@ -386,6 +396,12 @@
                         "reference": {
                             "fields": "name",
                             "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "flow_share_fix_sec_H2",
+                        "reference": {
+                            "resource": "flow_share_fix_sec_H2_sequence"
                         }
                     }
                 ],
@@ -663,6 +679,37 @@
                     },
                     {
                         "name": "year_DE",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "foreignKeys": []
+            }
+        },
+        {
+            "path": "data/sequences/flow_share_fix_sec_H2_sequence.csv",
+            "profile": "tabular-data-resource",
+            "name": "flow_share_fix_sec_H2_sequence",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "timeindex",
+                        "type": "datetime",
+                        "format": "default"
+                    },
+                    {
+                        "name": "sec_H2_flow_share",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
                         "type": "integer",
                         "format": "default"
                     }

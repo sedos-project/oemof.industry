@@ -609,6 +609,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         outputs = {}
         conversion_factors = {}
         emission_factors = {}
+        flow_shares = {}
         busses = {}
         groups = {}
 
@@ -624,7 +625,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         for key_1, value_1 in list(kwargs.items()):
             if key_1.startswith("group"):
                 # get the group's busses
-                bus_names = list(value_1.values())[0]  # todo check: is double list, check csv list reading
+                bus_names = list(value_1.values())[0]  # todo check: is double list, check csv dict/list reading
                 group_busses = [bus for bus in busses.items() if bus[1].label in bus_names]
                 # get bus direction: input or output (from/to)
                 keys = list(dict.fromkeys(dict(group_busses)))
@@ -654,14 +655,15 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 kwargs.pop(key_2)
             elif key_2.startswith("efficiency"):
                 # get bus or group name
-                suffix ="_".join(key_2.split("_")[1:])
-                # search bus, if bus does not exist: suffix is a group name
-                bus = [bus for bus in busses.items() if bus[1].label == suffix]
+                bus_label ="_".join(key_2.split("_")[1:])
+                # search bus, if bus does not exist: bus_label is a group name
+                bus = [bus for bus in busses.items() if bus[1].label == bus_label]
                 if bus:
                     conversion_factors[bus[0][1]] = value_2
                 else:
                     # it's a group
-                    conversion_factors[suffix] = value_2
+                    conversion_factors[bus_label] = value_2
+                    # todo add check: is it a group?
                 kwargs.pop(key_2)
             elif key_2.startswith("emission_factor"):
                 # search from_bus in `busses` and `groups` and write from_bus / to_bus options in dict
@@ -688,7 +690,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         bus_combinations.update({from_bus: group[0]})
                 # add emission factors and raise error if there is more than one combination of bus/group names found
                 if len(bus_combinations) == 1:
-                    from_bus = list(bus_combinations.keys())[0]  # todo cehck variables
+                    from_bus = list(bus_combinations.keys())[0]
                     to_bus = list(bus_combinations.values())[0]
                     try:
                         # entry already exists and is updated
@@ -701,5 +703,21 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     pass  # todo raise error
                 elif len(bus_combinations) > 1:
                     pass  # todo raise error
+            elif key_2.startswith("flow_share"):
+                share_type = key_2.split("_")[2]
+                bus_label = "_".join(key_2.split("_")[3:])
+                bus = [bus for bus in busses.items() if bus[1].label == bus_label]
+                if bus:
+                    bus_entry = bus[0][1]
+                else:
+                    # it's a group
+                    bus_entry = bus_label
+                try:
+                    # entry already exists and is updated
+                    flow_shares[share_type].update({bus_entry: value_2})
+                except KeyError:
+                    # add new entry for `to_bus`
+                    flow_shares[share_type] = {bus_entry: value_2}
+                kwargs.pop(key_2)
 
-        super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, emission_factors=emission_factors, **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, conversion_factors=conversion_factors, emission_factors=emission_factors, flow_shares=flow_shares, **kwargs)

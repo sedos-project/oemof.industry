@@ -33,7 +33,7 @@ m = Model(es)
 # select solver 'gurobi', 'cplex', 'glpk' etc
 m.solve("cbc")
 
-es.params = processing.parameter_as_dict(es)
+es.params = processing.parameter_as_dict(es, exclude_attrs=["group"])
 es.results = m.results()
 
 # Not working due to MIMO Group Flows not filtered in postprocessing.

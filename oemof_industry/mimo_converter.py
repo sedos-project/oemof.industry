@@ -653,9 +653,13 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                             f"Mix of input and output buses in group '{group_name}'."
                         )
                 # add multiple input/output to `inputs` or `outputs`
-                group_dict = {bus: Flow() for bus in buses.values() if bus.label in bus_names}
+                group_dict = {
+                    bus: Flow() for bus in buses.values() if bus.label in bus_names
+                }
                 if len(group_dict) != len(bus_names):
-                    raise LookupError(f"Could not find all buses form group '{group_name}'.")
+                    raise LookupError(
+                        f"Could not find all buses form group '{group_name}'."
+                    )
                 if group_direction == "from":
                     inputs[group_name] = group_dict
                 if group_direction == "to":
@@ -680,7 +684,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 else:
                     # it's a group
                     if bus_label not in groups:
-                        raise LookupError(f"Could not find bus '{bus_label}' for efficiency labeled '{key}'.")
+                        raise LookupError(
+                            f"Could not find bus '{bus_label}' for efficiency labeled '{key}'."
+                        )
                     conversion_factors[bus_label] = value
                 kwargs.pop(key)
             elif key.startswith("emission_factor"):

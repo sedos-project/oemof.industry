@@ -599,7 +599,6 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         self.emission_relation_build = BuildAction(rule=_emission_relation)
 
 
-@dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
     """ Facade for MIMO component.
 

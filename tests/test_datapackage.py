@@ -2,6 +2,7 @@ import pathlib
 
 from oemof.solph import EnergySystem, Model, processing
 from oemof.tabular import datapackage  # noqa
+
 # from oemof.tabular.postprocessing import calculations
 from oemof.tabular.facades import Bus, Commodity, Conversion, Excess, Load
 
@@ -33,6 +34,8 @@ m = Model(es)
 # select solver 'gurobi', 'cplex', 'glpk' etc
 m.solve("cbc")
 
+# Groups have to be excluded, otherwise processing tries to merge them to
+# component sequences resulting in an index error due to non-matching lengths of entries
 es.params = processing.parameter_as_dict(es, exclude_attrs=["group"])
 es.results = m.results()
 

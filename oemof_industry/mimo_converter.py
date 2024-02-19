@@ -620,23 +620,33 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     tech: str
 
     def __init__(self, **kwargs):
-        inputs = {}
-        outputs = {}
-        conversion_factors = {}
-        emission_factors = {}
-        flow_shares = {}
-        groups = {}
-
-        # get all busses for later processing
         buses = {
             key: value
             for key, value in kwargs.items()
             if hasattr(value, "type") and value.type == "bus"
         }
+        groups = kwargs.get("groups", {})
 
-        # add multiple inputs/outputs according to groups
+        inputs, outputs = self._init_inputs_and_outputs(buses, kwargs)
+        conversion_factors = self._init_efficiencies(buses, groups, kwargs)
+        emission_factors = self._init_emissions(buses, groups, kwargs)
+        flow_shares = self._init_flow_shares(buses, kwargs)
+
+        super().__init__(
+            inputs=inputs,
+            outputs=outputs,
+            conversion_factors=conversion_factors,
+            emission_factors=emission_factors,
+            flow_shares=flow_shares,
+            **kwargs,
+        )
+
+    @staticmethod
+    def _init_inputs_and_outputs(buses, kwargs):
+        inputs = {}
+        outputs = {}
+
         if "groups" in kwargs:
-            groups = kwargs["groups"]
             for group_name, bus_names in kwargs["groups"].items():
                 # get bus direction: input or output (from/to
                 group_direction = None
@@ -664,17 +674,23 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     inputs[group_name] = group_dict
                 if group_direction == "to":
                     outputs[group_name] = group_dict
-            kwargs.pop("groups")
 
-        # add remaining, single inputs and outputs, and other parameters
         for key, value in list(kwargs.items()):
             if key.startswith("from_bus"):
                 inputs[value] = Flow()
                 kwargs.pop(key)
-            elif key.startswith("to_bus"):
+            if key.startswith("to_bus"):
                 outputs[value] = Flow()
                 kwargs.pop(key)
-            elif key.startswith("efficiency"):
+
+        kwargs.pop("groups")
+        return inputs, outputs
+
+    @staticmethod
+    def _init_efficiencies(buses, groups, kwargs):
+        conversion_factors = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("efficiency"):
                 # get bus or group name
                 bus_label = "_".join(key.split("_")[1:])
                 # search bus, if bus does not exist: bus_label is a group name
@@ -689,8 +705,15 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         )
                     conversion_factors[bus_label] = value
                 kwargs.pop(key)
-            elif key.startswith("emission_factor"):
-                # search from_bus in `busses` and `groups` and write from_bus / to_bus options in dict
+
+        return conversion_factors
+
+    @staticmethod
+    def _init_emissions(buses, groups, kwargs):
+        emission_factors = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("emission_factor"):
+                # search from_bus in `buses` and `groups` and write from_bus / to_bus options in dict
                 suffixes = key.split("_")[2:]
                 bus_options = {}
                 for i in range(len(suffixes)):
@@ -703,7 +726,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     if group:
                         to_bus_name = "_".join(suffixes[i + 1 :])
                         bus_options.update({group[0]: to_bus_name})
-                # search to_bus in `busses` and `groups` for all combinations and write to new dict
+                # search to_bus in `buses` and `groups` for all combinations and write to new dict
                 bus_combinations = {}  # todo tuples instead?
                 for from_bus, to_bus_name in list(bus_options.items()):
                     bus = [bus for bus in buses.items() if bus[1].label == to_bus_name]
@@ -727,7 +750,14 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     pass  # todo raise error
                 elif len(bus_combinations) > 1:
                     pass  # todo raise error
-            elif key.startswith("flow_share"):
+
+        return emission_factors
+
+    @staticmethod
+    def _init_flow_shares(buses, kwargs):
+        flow_shares = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("flow_share"):
                 share_type = key.split("_")[2]
                 bus_label = "_".join(key.split("_")[3:])
                 bus = [bus for bus in buses.items() if bus[1].label == bus_label]
@@ -743,12 +773,4 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     # add new entry for `to_bus`
                     flow_shares[share_type] = {bus_entry: value}
                 kwargs.pop(key)
-
-        super().__init__(
-            inputs=inputs,
-            outputs=outputs,
-            conversion_factors=conversion_factors,
-            emission_factors=emission_factors,
-            flow_shares=flow_shares,
-            **kwargs,
-        )
+        return flow_shares

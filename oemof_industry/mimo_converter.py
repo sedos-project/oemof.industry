@@ -125,7 +125,7 @@ class MultiInputMultiOutputConverter(Node):
         emission_factors=None,
         flow_shares=None,
         custom_attributes=None,
-        **kwargs
+        **kwargs,
     ):
         self.label = label
 
@@ -149,6 +149,13 @@ class MultiInputMultiOutputConverter(Node):
         inputs = reduce(operator.ior, self.input_groups.values(), {})
         # Add emissions to outputs (as they are excluded from output groups before)
         outputs = reduce(operator.ior, self.output_groups.values(), {}) | emissions
+
+        # Primary bus is defined as the bus holding an investment.
+        # If no bus is holding an investment, primary bus is set to None
+        buses_holding_investment = [bus for bus, flow in (inputs | outputs).items() if flow.investment is not None]
+        if len(buses_holding_investment) > 1:
+            raise ValueError("Only one investment allowed.")
+        self.primary_bus = buses_holding_investment[0] if len(buses_holding_investment) == 1 else None
 
         if custom_attributes is None:
             custom_attributes = {}
@@ -426,6 +433,43 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                 for g in n.output_groups
             ],
             rule=_output_group_relation,
+        )
+
+        self.maximum_input_output_relation = Constraint(
+            [
+                (n, g, p, t)
+                for p, t in m.TIMEINDEX
+                for n in group
+                for g in list(n.input_groups) + list(n.output_groups)
+            ],
+            noruleinit=True,
+        )
+
+        def _maximum_input_output_group_relation(block):
+            for p, t in m.TIMEINDEX:
+                for n in group:
+                    if n.primary_bus is None:
+                        continue
+                    if n.primary_bus in n.inputs:
+                        g = list(n.input_groups)[0]
+                        lhs = block.INPUT_GROUP_FLOW[n, g, p, t]
+                        try:
+                            rhs = m.InvestmentFlowBlock.total[n.primary_bus, n, p]
+                        except (AttributeError, KeyError):
+                            continue
+                    else:
+                        g = list(n.output_groups)[0]
+                        lhs = block.OUTPUT_GROUP_FLOW[n, g, p, t]
+                        try:
+                            rhs = m.InvestmentFlowBlock.total[n, n.primary_bus, p]
+                        except (AttributeError, KeyError):
+                            # AttributeError is thrown in case of no InvestmentFlowBlock in whole ES,
+                            # KeyError is thrown if primary flow has no investment
+                            continue
+                    block.maximum_input_output_relation.add((n, g, p, t), lhs <= rhs)
+
+        self.maximum_input_output_relation_build = BuildAction(
+            rule=_maximum_input_output_group_relation
         )
 
         self.input_output_group_relation = Constraint(

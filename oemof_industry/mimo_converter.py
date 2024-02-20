@@ -150,7 +150,8 @@ class MultiInputMultiOutputConverter(Node):
         # Add emissions to outputs (as they are excluded from output groups before)
         outputs = reduce(operator.ior, self.output_groups.values(), {}) | emissions
 
-        # If primary is not set, define it as first output, otherwise search for primary string in inputs and outputs
+        # Primary bus is defined as the bus holding an investment.
+        # If no bus is holding an investment, primary bus is set to None
         buses_holding_investment = [bus for bus, flow in (inputs | outputs).items() if flow.investment is not None]
         if len(buses_holding_investment) > 1:
             raise ValueError("Only one investment allowed.")

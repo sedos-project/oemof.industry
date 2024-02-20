@@ -95,7 +95,7 @@
                     {
                         "fields": "profile",
                         "reference": {
-                            "resource": "el_demand_profile"
+                            "resource": "el_demand_sequence"
                         }
                     }
                 ]
@@ -161,7 +161,7 @@
                     {
                         "fields": "profile",
                         "reference": {
-                            "resource": "heat_demand_profile"
+                            "resource": "heat_demand_sequence"
                         }
                     }
                 ]
@@ -177,7 +177,102 @@
             "schema": {
                 "fields": [
                     {
-                        "name": "type;name;region;year;carrier;tech;from_bus_0;from_bus_1;to_bus_0;to_bus_1;to_bus_2;to_bus_3;to_bus_4;group_0;group_1;conversion_factors_out;emission_factor_gas_co2_em;emission_factor_out_ch4_em;emission_factor_out_n2o_em;flow_share_fix_hydro",
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "carrier",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "tech",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_0",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_0",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_3",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_4",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "group_0",
+                        "type": "object",
+                        "format": "default"
+                    },
+                    {
+                        "name": "group_1",
+                        "type": "object",
+                        "format": "default"
+                    },
+                    {
+                        "name": "conversion_factors_out",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_gas_co2_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_out_ch4_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_out_n2o_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "flow_share_fix_hydro",
                         "type": "string",
                         "format": "default"
                     }
@@ -188,10 +283,64 @@
                 "primaryKey": "name",
                 "foreignKeys": [
                     {
-                        "fields": "bus",
+                        "fields": "from_bus_0",
                         "reference": {
-                            "resource": "bus",
-                            "fields": "name"
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_0",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_2",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_3",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_4",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "flow_share_fix_hydro",
+                        "reference": {
+                            "resource": "flow_share_fix_hydro"
+                        }
+                    },
+                    {
+                        "fields": "conversion_factors_out",
+                        "reference": {
+                            "resource": "conversion_factors_out"
                         }
                     }
                 ]
@@ -358,9 +507,9 @@
             }
         },
         {
-            "path": "data/sequences/el_demand.csv",
+            "path": "data/sequences/el_demand_sequence.csv",
             "profile": "tabular-data-resource",
-            "name": "el_demand",
+            "name": "el_demand_sequence",
             "format": "csv",
             "mediatype": "text/csv",
             "encoding": "utf-8",
@@ -418,9 +567,9 @@
             }
         },
         {
-            "path": "data/sequences/heat_demand.csv",
+            "path": "data/sequences/heat_demand_sequence.csv",
             "profile": "tabular-data-resource",
-            "name": "heat_demand",
+            "name": "heat_demand_sequence",
             "format": "csv",
             "mediatype": "text/csv",
             "encoding": "utf-8",

@@ -1,0 +1,2 @@
+type;name;region;year;carrier;tech;from_bus_0;from_bus_1;to_bus_0;to_bus_1;to_bus_2;to_bus_3;to_bus_4;group_0;group_1;conversion_factors_out;emission_factor_gas_co2_em;emission_factor_out_ch4_em;emission_factor_out_n2o_em;flow_share_fix_hydro
+mimo;mimo_1;DE;2021;elec;mimo;gas;hydro;elec;heat;ch4_em;n2o_em;co2_em;{"in": ["gas", "hydro"]};{"out": ["elec", "heat"]};conversion_factors_out;56;0.0017;0.0031;flow_share_fix_hydro

@@ -1,0 +1,2 @@
+type;carrier;marginal_cost;name;region;year;bus;amount
+commodity;carrier;0;DE_carrier_tech_7;DE;2021;gas;100000

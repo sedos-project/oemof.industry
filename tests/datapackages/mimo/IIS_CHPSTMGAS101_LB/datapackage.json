@@ -242,12 +242,7 @@
                         "format": "default"
                     },
                     {
-                        "name": "group_0",
-                        "type": "object",
-                        "format": "default"
-                    },
-                    {
-                        "name": "group_1",
+                        "name": "groups",
                         "type": "object",
                         "format": "default"
                     },

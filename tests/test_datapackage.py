@@ -34,7 +34,7 @@ class TestMimoFacade:
             str(MIMO_DATAPACKAGE), attributemap={}, typemap=TYPEMAP
         )
 
-    def test_model_structure(self):
+    def test_model_structure(self):# todo note: test with "exo_steel"
 
         for mimo in self.es.groups[MultiInputMultiOutputConverterBlock]:  # todo - how to use `set`
 
@@ -62,7 +62,7 @@ class TestMimoFacade:
             # assert mimo.conversion_factors["sec_coke_oven_gas"].default == 2.2  # todo
             # assert mimo.conversion_factors["electricity"].default == 0.3
 
-    def test_results_IIS_CHPSTMGAS101_LB(self):
+    def test_results_IIS_CHPSTMGAS101_LB(self):  # todo note: test with IIS_CHPSTMGAS101_LB
         m = Model(self.es)
         m.solve("cbc")
 

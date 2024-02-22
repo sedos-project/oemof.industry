@@ -334,13 +334,13 @@
                     {
                         "fields": "flow_share_fix_hydro",
                         "reference": {
-                            "resource": "flow_share_fix_hydro"
+                            "resource": "flow_share_fix_hydro_sequence"
                         }
                     },
                     {
                         "fields": "conversion_factors_out",
                         "reference": {
-                            "resource": "conversion_factors_out"
+                            "resource": "conversion_factors_out_sequence"
                         }
                     }
                 ]
@@ -477,9 +477,9 @@
             }
         },
         {
-            "path": "data/sequences/conversion_factors_out.csv",
+            "path": "data/sequences/conversion_factors_out_sequence.csv",
             "profile": "tabular-data-resource",
-            "name": "conversion_factors_out",
+            "name": "conversion_factors_out_sequence",
             "format": "csv",
             "mediatype": "text/csv",
             "encoding": "utf-8",
@@ -537,9 +537,9 @@
             }
         },
         {
-            "path": "data/sequences/flow_share_fix_hydro.csv",
+            "path": "data/sequences/flow_share_fix_hydro_sequence.csv",
             "profile": "tabular-data-resource",
-            "name": "flow_share_fix_hydro",
+            "name": "flow_share_fix_hydro_sequence",
             "format": "csv",
             "mediatype": "text/csv",
             "encoding": "utf-8",

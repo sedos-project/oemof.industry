@@ -19,8 +19,8 @@ class TestMimoFacade:
     def setup_method(cls):
         MIMO_DATAPACKAGE = (
                 pathlib.Path(
-                    __file__).parent / "datapackages" / "mimo" / "exo_steel" / "datapackage.json"
-                    # __file__).parent / "datapackages" / "mimo" / "IIS_CHPSTMGAS101_LB" / "datapackage.json"
+                    # __file__).parent / "datapackages" / "mimo" / "exo_steel" / "datapackage.json"
+                    __file__).parent / "datapackages" / "mimo" / "IIS_CHPSTMGAS101_LB" / "datapackage.json"
         )
         TYPEMAP = {
             "bus": Bus,
@@ -61,6 +61,42 @@ class TestMimoFacade:
             assert mimo.conversion_factors["gas"].default == 5
             # assert mimo.conversion_factors["sec_coke_oven_gas"].default == 2.2  # todo
             # assert mimo.conversion_factors["electricity"].default == 0.3
+
+    def test_results_IIS_CHPSTMGAS101_LB(self):
+        m = Model(self.es)
+        m.solve("cbc")
+
+        # create result object
+        results = processing.convert_keys_to_strings(processing.results(m))
+
+        assert results[("gas", "mimo")]["sequences"]["flow"].values[
+                   0
+               ] == pytest.approx(5.4945, abs=1e-3)
+        assert results[("gas", "mimo")]["sequences"]["flow"].values[
+                   1
+               ] == pytest.approx(0)
+        assert results[("hydro", "mimo")]["sequences"]["flow"].values[
+                   0
+               ] == pytest.approx(5.4945, abs=1e-2)
+        assert results[("hydro", "mimo")]["sequences"]["flow"].values[
+                   1
+               ] == pytest.approx(10.8696, abs=1e-3)
+        assert results[("mimo", "ch4_em")]["sequences"]["flow"].values[
+                   0] == pytest.approx(
+            0.0149, abs=1e-3
+        )
+        assert results[("mimo", "ch4_em")]["sequences"]["flow"].values[
+                   1] == pytest.approx(
+            0.0148, abs=1e-3
+        )
+        assert results[("mimo", "co2_em")]["sequences"]["flow"].values[
+                   0] == pytest.approx(
+            307.6923, abs=1e-2
+        )
+        assert results[("mimo", "co2_em")]["sequences"]["flow"].values[
+                   1] == pytest.approx(
+            0
+        )
 
     def test_solving_and_postprocessing(self):
         m = Model(self.es)

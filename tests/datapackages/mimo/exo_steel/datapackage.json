@@ -281,7 +281,7 @@
                         "format": "default"
                     },
                     {
-                        "name": "group_0",
+                        "name": "groups",
                         "type": "object",
                         "format": "default"
                     },

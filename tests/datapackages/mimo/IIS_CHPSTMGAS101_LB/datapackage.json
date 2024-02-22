@@ -552,7 +552,7 @@
                     },
                     {
                         "name": "profile_DE",
-                        "type": "integer",
+                        "type": "number",
                         "format": "default"
                     },
                     {

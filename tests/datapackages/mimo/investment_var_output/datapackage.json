@@ -1,0 +1,510 @@
+{
+    "profile": "tabular-data-package",
+    "name": "oemof-tabular-dispatch-example",
+    "oemof_tabular_version": "0.0.5dev",
+    "resources": [
+        {
+            "path": "data/elements/bus.csv",
+            "profile": "tabular-data-resource",
+            "name": "bus",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "balanced",
+                        "type": "boolean",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": []
+            }
+        },
+        {
+            "path": "data/elements/heat_demand.csv",
+            "profile": "tabular-data-resource",
+            "name": "heat_demand",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "profile",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "bus",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "resource": "bus",
+                            "fields": "name"
+                        }
+                    },
+                    {
+                        "fields": "profile",
+                        "reference": {
+                            "resource": "heat_demand_sequence"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "path": "data/elements/mimo.csv",
+            "profile": "tabular-data-resource",
+            "name": "mimo",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "dialect": {
+                "delimiter": ";"
+            },
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "carrier",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "tech",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "expandable",
+                        "type": "boolean",
+                        "format": "default"
+                    },
+                    {
+                        "name": "primary",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "capacity_cost",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "capacity_potential",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_0",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_0",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "groups",
+                        "type": "object",
+                        "format": "default"
+                    },
+                    {
+                        "name": "conversion_factor_gas",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "conversion_factor_hydro",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "conversion_factor_heat",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "flow_share_fix_gas",
+                        "type": "string",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": [
+                    {
+                        "fields": "from_bus_0",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_0",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "flow_share_fix_gas",
+                        "reference": {
+                            "resource": "flow_share_fix_hydro_sequence"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "path": "data/elements/x2x_import_gas.csv",
+            "profile": "tabular-data-resource",
+            "name": "x2x_import_gas",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "carrier",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "marginal_cost",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "bus",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "resource": "bus",
+                            "fields": "name"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "path": "data/elements/x2x_import_heat.csv",
+            "profile": "tabular-data-resource",
+            "name": "x2x_import_heat",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "carrier",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "marginal_cost",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "bus",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "resource": "bus",
+                            "fields": "name"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "path": "data/elements/x2x_import_hydro.csv",
+            "profile": "tabular-data-resource",
+            "name": "x2x_import_hydro",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "carrier",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "marginal_cost",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "region",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "bus",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name",
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "resource": "bus",
+                            "fields": "name"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "path": "data/sequences/flow_shares.csv",
+            "profile": "tabular-data-resource",
+            "name": "flow_share_fix_hydro_sequence",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "timeindex",
+                        "type": "datetime",
+                        "format": "default"
+                    },
+                    {
+                        "name": "profile_DE",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year_DE",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ]
+            }
+        },
+        {
+            "path": "data/sequences/heat_demand_sequence.csv",
+            "profile": "tabular-data-resource",
+            "name": "heat_demand_sequence",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "timeindex",
+                        "type": "datetime",
+                        "format": "default"
+                    },
+                    {
+                        "name": "profile_DE",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year_DE",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ]
+            }
+        }
+    ]
+}

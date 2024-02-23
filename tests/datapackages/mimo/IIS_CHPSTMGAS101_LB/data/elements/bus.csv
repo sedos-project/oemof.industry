@@ -1,8 +1,8 @@
 name;type;balanced
-gas;bus;True
-hydro;bus;True
-elec;bus;True
-heat;bus;True
-co2_em;bus;False
-ch4_em;bus;False
-n2o_em;bus;False
+IISGAS-LB;bus;True
+IISHH2-LB;bus;True
+IISELC-LB;bus;True
+IISHTH-LB;bus;True
+INDCO2N;bus;False
+INDCH4N;bus;False
+INDN2ON;bus;False

@@ -255,22 +255,22 @@
                         "format": "default"
                     },
                     {
-                        "name": "emission_factor_gas_co2_em",
+                        "name": "emission_factor_IISGAS-LB_INDCO2N",
                         "type": "number",
                         "format": "default"
                     },
                     {
-                        "name": "emission_factor_out_ch4_em",
+                        "name": "emission_factor_out_INDCH4N",
                         "type": "number",
                         "format": "default"
                     },
                     {
-                        "name": "emission_factor_out_n2o_em",
+                        "name": "emission_factor_out_INDN2ON",
                         "type": "number",
                         "format": "default"
                     },
                     {
-                        "name": "flow_share_fix_hydro",
+                        "name": "flow_share_fix_IISHH2-LB",
                         "type": "string",
                         "format": "default"
                     }
@@ -330,7 +330,7 @@
                         }
                     },
                     {
-                        "fields": "flow_share_fix_hydro",
+                        "fields": "flow_share_fix_IISHH2-LB",
                         "reference": {
                             "resource": "flow_share_fix_hydro_sequence"
                         }

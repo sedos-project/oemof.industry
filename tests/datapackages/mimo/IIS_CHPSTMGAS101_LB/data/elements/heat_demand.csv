@@ -1,2 +1,2 @@
 type;profile;name;region;year;bus;amount
-load;profile_DE;heat_demand;DE;2021;heat;1
+load;profile_DE;heat_demand;DE;2021;IISHTH-LB;1

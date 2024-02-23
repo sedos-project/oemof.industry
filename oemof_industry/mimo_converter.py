@@ -691,6 +691,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
 
     def _init_inputs_and_outputs(self, buses, kwargs):
         def create_flow(bus):
+            """If component is expandable, put investment on primary bus."""
             investment = self._investment()
             if not investment:
                 return Flow()

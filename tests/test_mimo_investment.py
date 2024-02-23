@@ -95,7 +95,7 @@ def test_investment_fix_outputs():
 
 
 def test_investment_var_outputs():
-    idx = pd.date_range("1/1/2017", periods=2, freq="H")
+    idx = pd.date_range("1/1/2017", periods=3, freq="H")
     es = EnergySystem(timeindex=idx)
 
     # resources
@@ -110,7 +110,7 @@ def test_investment_var_outputs():
     b_electricity = Bus(label="electricity", balanced=False)
     es.add(b_electricity)
 
-    b_heat = Bus(label="heat", balanced=True)
+    b_heat = Bus(label="heat")
     es.add(b_heat)
 
     es.add(Source(label="heat_import", outputs={b_heat: Flow(variable_costs=200)}))

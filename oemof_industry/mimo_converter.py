@@ -732,9 +732,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     def _init_efficiencies(buses, groups, kwargs):
         conversion_factors = {}
         for key, value in list(kwargs.items()):
-            if key.startswith("efficiency"):
+            if key.startswith("conversion_factor"):
                 # get bus or group name
-                bus_label = "_".join(key.split("_")[1:])
+                bus_label = key[len("conversion_factor_"):]
                 # search bus, if bus does not exist: bus_label is a group name
                 bus = [bus for bus in buses.values() if bus.label == bus_label]
                 if bus:

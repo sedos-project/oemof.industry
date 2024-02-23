@@ -31,7 +31,7 @@ from oemof.solph._helpers import warn_if_missing_attribute
 from oemof.solph._plumbing import sequence
 from oemof.solph.buses import Bus
 from oemof.solph.flows import Flow
-from oemof.tabular._facade import Facade, dataclass_facade
+from oemof.tabular._facade import Facade
 from pyomo.core import BuildAction, Constraint
 from pyomo.core.base.block import ScalarBlock
 from pyomo.environ import NonNegativeReals, Set, Var
@@ -152,10 +152,16 @@ class MultiInputMultiOutputConverter(Node):
 
         # Primary bus is defined as the bus holding an investment.
         # If no bus is holding an investment, primary bus is set to None
-        buses_holding_investment = [bus for bus, flow in (inputs | outputs).items() if flow.investment is not None]
+        buses_holding_investment = [
+            bus
+            for bus, flow in (inputs | outputs).items()
+            if flow.investment is not None
+        ]
         if len(buses_holding_investment) > 1:
             raise ValueError("Only one investment allowed.")
-        self.primary_bus = buses_holding_investment[0] if len(buses_holding_investment) == 1 else None
+        self.primary_bus = (
+            buses_holding_investment[0] if len(buses_holding_investment) == 1 else None
+        )
 
         if custom_attributes is None:
             custom_attributes = {}
@@ -651,12 +657,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     # todo naming convention for parameters (keys in csv) is required.
     # Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
     """
+
     carrier: str
     tech: str
-    capacity_cost: float = None
-    expandable: bool = False
-    capacity_potential: float = float("+inf")
-    capacity_minimum: float = None
 
     def __init__(self, **kwargs):
         buses = {
@@ -665,6 +668,12 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
             if hasattr(value, "type") and value.type == "bus"
         }
         groups = kwargs.get("groups", {})
+
+        # Init investment
+        self.capacity_cost: float = kwargs.get("capacity_cost")
+        self.expandable: bool = kwargs.get("expandable", False)
+        self.capacity_potential: float = kwargs.get("capacity_potential", float("+inf"))
+        self.capacity_minimum: float = kwargs.get("capacity_minimum")
 
         inputs, outputs = self._init_inputs_and_outputs(buses, kwargs)
         conversion_factors = self._init_efficiencies(buses, groups, kwargs)
@@ -680,8 +689,19 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
             **kwargs,
         )
 
-    @staticmethod
-    def _init_inputs_and_outputs(buses, kwargs):
+    def _init_inputs_and_outputs(self, buses, kwargs):
+        def create_flow(bus):
+            investment = self._investment()
+            if not investment:
+                return Flow()
+            if investment and "primary" not in kwargs:
+                raise AttributeError(
+                    "If you want to set investment you have to define primary bus to put investment on."
+                )
+            if bus.label == kwargs["primary"]:
+                return Flow(nominal_value=investment)
+            return Flow()
+
         inputs = {}
         outputs = {}
 
@@ -703,7 +723,9 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                         )
                 # add multiple input/output to `inputs` or `outputs`
                 group_dict = {
-                    bus: Flow() for bus in buses.values() if bus.label in bus_names
+                    bus: create_flow(bus)
+                    for bus in buses.values()
+                    if bus.label in bus_names
                 }
                 if len(group_dict) != len(bus_names):
                     raise LookupError(
@@ -714,12 +736,12 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 if group_direction == "to":
                     outputs[group_name] = group_dict
 
-        for key, value in list(kwargs.items()):
+        for key, bus in list(kwargs.items()):
             if key.startswith("from_bus"):
-                inputs[value] = Flow()
+                inputs[bus] = create_flow(bus)
                 kwargs.pop(key)
             if key.startswith("to_bus"):
-                outputs[value] = Flow()
+                outputs[bus] = create_flow(bus)
                 kwargs.pop(key)
 
         kwargs.pop("groups")
@@ -731,7 +753,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         for key, value in list(kwargs.items()):
             if key.startswith("conversion_factor"):
                 # get bus or group name
-                bus_label = key[len("conversion_factor_"):]
+                bus_label = key[len("conversion_factor_") :]
                 # search bus, if bus does not exist: bus_label is a group name
                 bus = [bus for bus in buses.values() if bus.label == bus_label]
                 if bus:

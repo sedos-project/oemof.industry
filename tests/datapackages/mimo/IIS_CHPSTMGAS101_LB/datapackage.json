@@ -250,7 +250,7 @@
                         "format": "default"
                     },
                     {
-                        "name": "conversion_factors_out",
+                        "name": "conversion_factor_out",
                         "type": "string",
                         "format": "default"
                     },
@@ -336,7 +336,7 @@
                         }
                     },
                     {
-                        "fields": "conversion_factors_out",
+                        "fields": "conversion_factor_out",
                         "reference": {
                             "resource": "conversion_factors_out_sequence"
                         }

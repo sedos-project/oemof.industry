@@ -118,7 +118,7 @@ def test_investment_var_outputs():
     es.add(
         Sink(
             label="demand",
-            inputs={b_heat: Flow(fix=[100, 100], nominal_value=1)},
+            inputs={b_heat: Flow(fix=[100, 100, 100], nominal_value=1)},
         )
     )
 
@@ -133,7 +133,7 @@ def test_investment_var_outputs():
                 },
             },
             conversion_factors={b_gas: 1.2, b_hydro: 1.3, b_heat: 1.2},
-            flow_shares={"fix": {b_gas: [0.8, 0.3]}},
+            flow_shares={"fix": {b_gas: [0.8, 0.3, 0.3]}},
         )
     )
 
@@ -146,8 +146,11 @@ def test_investment_var_outputs():
     # create result object
     results = processing.convert_keys_to_strings(processing.results(om))
 
-    assert results[("mimo", "electricity")]["scalars"]["invest"] == 20
+    check_results_for_investment_var_output(results)
 
+
+def check_results_for_investment_var_output(results):
+    assert results[("mimo", "electricity")]["scalars"]["invest"] == 20
     assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 20 * 1.2
     assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == 100 - 20 * 1.2
     assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 0

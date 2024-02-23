@@ -641,25 +641,22 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         self.emission_relation_build = BuildAction(rule=_emission_relation)
 
 
+@dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
     """Facade for MIMO component.
 
     Pre-inits mimo specific parameters and drops them from `kwargs`: busses,
     conversion_factors, emission_factors, and flow_shares.
 
-    # todo naming convention for parameters (keys in csv) is required. Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
-
-    Parameters
-    ----------
-    carrier :
-
-    tech :
-
-
+    # todo naming convention for parameters (keys in csv) is required.
+    # Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
     """
-
     carrier: str
     tech: str
+    capacity_cost: float = None
+    expandable: bool = False
+    capacity_potential: float = float("+inf")
+    capacity_minimum: float = None
 
     def __init__(self, **kwargs):
         buses = {

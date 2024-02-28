@@ -184,6 +184,11 @@
                         "format": "default"
                     },
                     {
+                        "name": "to_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
                         "name": "groups",
                         "type": "object",
                         "format": "default"
@@ -200,6 +205,16 @@
                     },
                     {
                         "name": "conversion_factor_heat",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_gas_co2",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_hydro_co2",
                         "type": "number",
                         "format": "default"
                     },
@@ -237,6 +252,13 @@
                     },
                     {
                         "fields": "to_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_2",
                         "reference": {
                             "fields": "name",
                             "resource": "bus"

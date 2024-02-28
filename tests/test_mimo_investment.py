@@ -154,3 +154,6 @@ def check_results_for_investment_var_output(results):
     assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 20 * 1.2
     assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == 100 - 20 * 1.2
     assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 0
+
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 1.2 * 0.8)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 1.3 * 0.2)

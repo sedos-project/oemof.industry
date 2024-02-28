@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 from oemof.solph import EnergySystem, Model, processing
 from oemof.tabular import datapackage  # noqa
 from oemof.tabular.facades import Bus, Commodity, Conversion, Excess, Load
@@ -55,3 +56,10 @@ def test_datapackage_results_for_investment_var_outputs():
 
     results = processing.convert_keys_to_strings(processing.results(m))
     check_results_for_investment_var_output(results)
+
+    # Check emissions:
+    gas_input = 20 * 1.2 * 0.8
+    hydro_input = 20 * 1.3 * 0.2
+    assert results[("mimo", "co2")]["sequences"]["flow"].values[0] == pytest.approx(
+        gas_input * 0.5 + hydro_input * 0.3
+    )

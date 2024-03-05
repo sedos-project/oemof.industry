@@ -31,7 +31,7 @@ from oemof.solph._helpers import warn_if_missing_attribute
 from oemof.solph._plumbing import sequence
 from oemof.solph.buses import Bus
 from oemof.solph.flows import Flow
-from oemof.tabular._facade import Facade, dataclass_facade
+from oemof.tabular._facade import Facade
 from pyomo.core import BuildAction, Constraint
 from pyomo.core.base.block import ScalarBlock
 from pyomo.environ import NonNegativeReals, Set, Var
@@ -125,7 +125,7 @@ class MultiInputMultiOutputConverter(Node):
         emission_factors=None,
         flow_shares=None,
         custom_attributes=None,
-        **kwargs
+        **kwargs,
     ):
         self.label = label
 
@@ -149,6 +149,19 @@ class MultiInputMultiOutputConverter(Node):
         inputs = reduce(operator.ior, self.input_groups.values(), {})
         # Add emissions to outputs (as they are excluded from output groups before)
         outputs = reduce(operator.ior, self.output_groups.values(), {}) | emissions
+
+        # Primary bus is defined as the bus holding an investment.
+        # If no bus is holding an investment, primary bus is set to None
+        buses_holding_investment = [
+            bus
+            for bus, flow in (inputs | outputs).items()
+            if flow.investment is not None
+        ]
+        if len(buses_holding_investment) > 1:
+            raise ValueError("Only one investment allowed.")
+        self.primary_bus = (
+            buses_holding_investment[0] if len(buses_holding_investment) == 1 else None
+        )
 
         if custom_attributes is None:
             custom_attributes = {}
@@ -428,6 +441,43 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
             rule=_output_group_relation,
         )
 
+        self.maximum_input_output_relation = Constraint(
+            [
+                (n, g, p, t)
+                for p, t in m.TIMEINDEX
+                for n in group
+                for g in list(n.input_groups) + list(n.output_groups)
+            ],
+            noruleinit=True,
+        )
+
+        def _maximum_input_output_group_relation(block):
+            for p, t in m.TIMEINDEX:
+                for n in group:
+                    if n.primary_bus is None:
+                        continue
+                    if n.primary_bus in n.inputs:
+                        g = list(n.input_groups)[0]
+                        lhs = block.INPUT_GROUP_FLOW[n, g, p, t]
+                        try:
+                            rhs = m.InvestmentFlowBlock.total[n.primary_bus, n, p]
+                        except (AttributeError, KeyError):
+                            continue
+                    else:
+                        g = list(n.output_groups)[0]
+                        lhs = block.OUTPUT_GROUP_FLOW[n, g, p, t]
+                        try:
+                            rhs = m.InvestmentFlowBlock.total[n, n.primary_bus, p]
+                        except (AttributeError, KeyError):
+                            # AttributeError is thrown in case of no InvestmentFlowBlock in whole ES,
+                            # KeyError is thrown if primary flow has no investment
+                            continue
+                    block.maximum_input_output_relation.add((n, g, p, t), lhs <= rhs)
+
+        self.maximum_input_output_relation_build = BuildAction(
+            rule=_maximum_input_output_group_relation
+        )
+
         self.input_output_group_relation = Constraint(
             [
                 (n, g, p, t)
@@ -599,20 +649,190 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
 @dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
-    """Facade for MIMO component"""
+    """Facade for MIMO component.
+
+    Pre-inits mimo specific parameters and drops them from `kwargs`: busses,
+    conversion_factors, emission_factors, and flow_shares.
+
+    # todo naming convention for parameters (keys in csv) is required.
+    # Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
+    """
 
     carrier: str
     tech: str
 
     def __init__(self, **kwargs):
+        buses = {
+            key: value
+            for key, value in kwargs.items()
+            if hasattr(value, "type") and value.type == "bus"
+        }
+        groups = kwargs.get("groups", {})
+
+        # Init investment
+        self.capacity_cost: float = kwargs.get("capacity_cost")
+        self.expandable: bool = kwargs.get("expandable", False)
+        self.capacity_potential: float = kwargs.get("capacity_potential", float("+inf"))
+        self.capacity_minimum: float = kwargs.get("capacity_minimum")
+
+        inputs, outputs = self._init_inputs_and_outputs(buses, kwargs)
+        conversion_factors = self._init_efficiencies(buses, groups, kwargs)
+        emission_factors = self._init_emissions(buses, groups, kwargs)
+        flow_shares = self._init_flow_shares(buses, kwargs)
+
+        super().__init__(
+            inputs=inputs,
+            outputs=outputs,
+            conversion_factors=conversion_factors,
+            emission_factors=emission_factors,
+            flow_shares=flow_shares,
+            **kwargs,
+        )
+
+    def _init_inputs_and_outputs(self, buses, kwargs):
+        def create_flow(bus):
+            """If component is expandable, put investment on primary bus."""
+            investment = self._investment()
+            if not investment:
+                return Flow()
+            if investment and "primary" not in kwargs:
+                raise AttributeError(
+                    "If you want to set investment you have to define primary bus to put investment on."
+                )
+            if bus.label == kwargs["primary"]:
+                return Flow(nominal_value=investment)
+            return Flow()
+
         inputs = {}
         outputs = {}
-        for key, value in list(kwargs.items()):
+
+        if "groups" in kwargs:
+            for group_name, bus_names in kwargs["groups"].items():
+                # get bus direction: input or output (from/to
+                group_direction = None
+                for from_to_name, bus in buses.items():
+                    if bus.label not in bus_names:
+                        continue
+                    # Remove grouped bus from kwargs so that it is not added twice
+                    kwargs.pop(from_to_name)
+                    # Detect whether group is input or output group
+                    if group_direction is None:
+                        group_direction = from_to_name.split("_")[0]
+                    if group_direction != from_to_name.split("_")[0]:
+                        raise RuntimeError(
+                            f"Mix of input and output buses in group '{group_name}'."
+                        )
+                # add multiple input/output to `inputs` or `outputs`
+                group_dict = {
+                    bus: create_flow(bus)
+                    for bus in buses.values()
+                    if bus.label in bus_names
+                }
+                if len(group_dict) != len(bus_names):
+                    raise LookupError(
+                        f"Could not find all buses form group '{group_name}'."
+                    )
+                if group_direction == "from":
+                    inputs[group_name] = group_dict
+                if group_direction == "to":
+                    outputs[group_name] = group_dict
+
+        for key, bus in list(kwargs.items()):
             if key.startswith("from_bus"):
-                inputs[value] = Flow()
+                inputs[bus] = create_flow(bus)
                 kwargs.pop(key)
             if key.startswith("to_bus"):
-                outputs[value] = Flow()
+                outputs[bus] = create_flow(bus)
                 kwargs.pop(key)
 
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
+        kwargs.pop("groups")
+        return inputs, outputs
+
+    @staticmethod
+    def _init_efficiencies(buses, groups, kwargs):
+        conversion_factors = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("conversion_factor"):
+                # get bus or group name
+                bus_label = key[len("conversion_factor_") :]
+                # search bus, if bus does not exist: bus_label is a group name
+                bus = [bus for bus in buses.values() if bus.label == bus_label]
+                if bus:
+                    conversion_factors[bus[0]] = value
+                else:
+                    # it's a group
+                    if bus_label not in groups:
+                        raise LookupError(
+                            f"Could not find bus '{bus_label}' for efficiency labeled '{key}'."
+                        )
+                    conversion_factors[bus_label] = value
+                kwargs.pop(key)
+
+        return conversion_factors
+
+    @staticmethod
+    def _init_emissions(buses, groups, kwargs):
+        emission_factors = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("emission_factor"):
+                # search from_bus in `buses` and `groups` and write from_bus / to_bus options in dict
+                suffixes = key.split("_")[2:]
+                bus_options = {}
+                for i in range(len(suffixes)):
+                    part = "_".join(suffixes[: i + 1])
+                    bus = [bus for bus in buses.items() if bus[1].label == part]
+                    group = [group for group in groups if group == part]
+                    if bus:
+                        to_bus_name = "_".join(suffixes[i + 1 :])
+                        bus_options.update({bus[0][1]: to_bus_name})
+                    if group:
+                        to_bus_name = "_".join(suffixes[i + 1 :])
+                        bus_options.update({group[0]: to_bus_name})
+                # search to_bus in `buses` and `groups` for all combinations and write to new dict
+                bus_combinations = {}  # todo tuples instead?
+                for from_bus, to_bus_name in list(bus_options.items()):
+                    bus = [bus for bus in buses.items() if bus[1].label == to_bus_name]
+                    group = [group for group in groups if group == to_bus_name]
+                    if bus:
+                        bus_combinations.update({from_bus: bus[0][1]})
+                    if group:
+                        bus_combinations.update({from_bus: group[0]})
+                # add emission factors and raise error if there is more than one combination of bus/group names found
+                if len(bus_combinations) == 1:
+                    from_bus = list(bus_combinations.keys())[0]
+                    to_bus = list(bus_combinations.values())[0]
+                    try:
+                        # entry already exists and is updated
+                        emission_factors[to_bus].update({from_bus: value})
+                    except KeyError:
+                        # add new entry for `to_bus`
+                        emission_factors[to_bus] = {from_bus: value}
+                    kwargs.pop(key)
+                elif len(bus_combinations) == 0:
+                    pass  # todo raise error
+                elif len(bus_combinations) > 1:
+                    pass  # todo raise error
+
+        return emission_factors
+
+    @staticmethod
+    def _init_flow_shares(buses, kwargs):
+        flow_shares = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("flow_share"):
+                share_type = key.split("_")[2]
+                bus_label = "_".join(key.split("_")[3:])
+                bus = [bus for bus in buses.items() if bus[1].label == bus_label]
+                if bus:
+                    bus_entry = bus[0][1]
+                else:
+                    # it's a group
+                    bus_entry = bus_label
+                try:
+                    # entry already exists and is updated
+                    flow_shares[share_type].update({bus_entry: value})
+                except KeyError:
+                    # add new entry for `to_bus`
+                    flow_shares[share_type] = {bus_entry: value}
+                kwargs.pop(key)
+        return flow_shares

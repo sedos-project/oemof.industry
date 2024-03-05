@@ -1,0 +1,2 @@
+type;name;region;year;carrier;tech;from_bus_0;from_bus_1;to_bus_0;to_bus_1;to_bus_2;to_bus_3;to_bus_4;groups;conversion_factor_out;emission_factor_IISGAS-LB_INDCO2N;emission_factor_out_INDCH4N;emission_factor_out_INDN2ON;flow_share_fix_IISHH2-LB
+mimo;mimo;DE;2021;elec;mimo;IISGAS-LB;IISHH2-LB;IISELC-LB;IISHTH-LB;INDCH4N;INDN2ON;INDCO2N;{"in": ["IISGAS-LB", "IISHH2-LB"], "out": ["IISELC-LB", "IISHTH-LB"]};profile_DE;56;0.0017;0.0031;profile_DE

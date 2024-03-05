@@ -246,13 +246,88 @@
                         "format": "default"
                     },
                     {
+                        "name": "from_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_3",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "from_bus_4",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
                         "name": "to_bus_0",
                         "type": "string",
                         "format": "default"
                     },
                     {
-                        "name": "group_0",
+                        "name": "to_bus_1",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_2",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "to_bus_3",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "groups",
                         "type": "object",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_sec_coke_oven_gas",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_electricity",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency_gas",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_ch4_co2_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_sec_coke_oven_gas_co2_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_gas_ch4_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor_exo_steel_ch4_em",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "flow_share_max_ch4",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "flow_share_fix_sec_H2",
+                        "type": "string",
                         "format": "default"
                     }
                 ],
@@ -275,10 +350,58 @@
                         }
                     },
                     {
+                        "fields": "from_bus_2",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_3",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "from_bus_4",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
                         "fields": "to_bus_0",
                         "reference": {
                             "fields": "name",
                             "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_1",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_2",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus_3",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "flow_share_fix_sec_H2",
+                        "reference": {
+                            "resource": "flow_share_fix_sec_H2_sequence"
                         }
                     }
                 ],
@@ -337,6 +460,16 @@
                     {
                         "name": "to_bus",
                         "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "efficiency",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "emission_factor",
+                        "type": "number",
                         "format": "default"
                     }
                 ],
@@ -546,6 +679,37 @@
                     },
                     {
                         "name": "year_DE",
+                        "type": "integer",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "foreignKeys": []
+            }
+        },
+        {
+            "path": "data/sequences/flow_share_fix_sec_H2_sequence.csv",
+            "profile": "tabular-data-resource",
+            "name": "flow_share_fix_sec_H2_sequence",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "timeindex",
+                        "type": "datetime",
+                        "format": "default"
+                    },
+                    {
+                        "name": "sec_H2_flow_share",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
+                        "name": "year",
                         "type": "integer",
                         "format": "default"
                     }

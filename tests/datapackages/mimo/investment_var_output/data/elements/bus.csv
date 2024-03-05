@@ -1,0 +1,6 @@
+name;type;balanced
+gas;bus;True
+hydro;bus;True
+electricity;bus;False
+heat;bus;True
+co2;bus;False

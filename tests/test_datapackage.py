@@ -1,15 +1,14 @@
 import pathlib
 
+import pytest
 from oemof.solph import EnergySystem, Model, processing
 from oemof.tabular import datapackage  # noqa
-# from oemof.tabular.postprocessing import calculations
 from oemof.tabular.facades import Bus, Commodity, Conversion, Excess, Load
 
 from oemof_industry.mimo_converter import MIMO
+from tests.test_mimo_converter import check_results_for_IIS_CHPSTMGAS101_LB
+from tests.test_mimo_investment import check_results_for_investment_var_output
 
-MIMO_DATAPACKAGE = (
-    pathlib.Path(__file__).parent / "datapackages" / "mimo" / "datapackage.json"
-)
 
 TYPEMAP = {
     "bus": Bus,
@@ -21,31 +20,46 @@ TYPEMAP = {
 }
 
 
-es = EnergySystem.from_datapackage(
-    str(MIMO_DATAPACKAGE), attributemap={}, typemap=TYPEMAP
-)
+def test_datapackage_results_for_IIS_CHPSTMGAS101_LB():
+    datapackage_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "IIS_CHPSTMGAS101_LB"
+        / "datapackage.json"
+    )
+    es = EnergySystem.from_datapackage(
+        str(datapackage_path), attributemap={}, typemap=TYPEMAP
+    )
 
-m = Model(es)
+    m = Model(es)
+    m.solve("cbc")
 
-# if you want dual variables / shadow prices uncomment line below
-# m.receive_duals()
+    results = processing.convert_keys_to_strings(processing.results(m))
+    check_results_for_IIS_CHPSTMGAS101_LB(results)
 
-# select solver 'gurobi', 'cplex', 'glpk' etc
-m.solve("cbc")
 
-es.params = processing.parameter_as_dict(es)
-es.results = m.results()
+def test_datapackage_results_for_investment_var_outputs():
+    datapackage_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "investment_var_output"
+        / "datapackage.json"
+    )
+    es = EnergySystem.from_datapackage(
+        str(datapackage_path), attributemap={}, typemap=TYPEMAP
+    )
 
-# Not working due to MIMO Group Flows not filtered in postprocessing.
-# As the pyomo tuples of those variables are holding node, group_name, period
-# and timeindex and period and timeindex are not removed, like it is done for
-# Flow Vars, this leads to an error
-# (ValueError: Length of names must match number of levels in MultiIndex) in
-# `Calculator` class in `oemof.tabular.postprocessing.core` when Multiindex is
-# set from oemof_tuple.
+    m = Model(es)
+    m.solve("cbc")
 
-# -> We have to adapt tabulars postprocessing in order to get rid of this error
-# Maybe only in private branch, as this is caused by custom facade MIMO.
+    results = processing.convert_keys_to_strings(processing.results(m))
+    check_results_for_investment_var_output(results)
 
-# postprocessed_results = calculations.run_postprocessing(es)
-# postprocessed_results.to_csv("./results.csv")
+    # Check emissions:
+    gas_input = 20 * 1.2 * 0.8
+    hydro_input = 20 * 1.3 * 0.2
+    assert results[("mimo", "co2")]["sequences"]["flow"].values[0] == pytest.approx(
+        gas_input * 0.5 + hydro_input * 0.3
+    )

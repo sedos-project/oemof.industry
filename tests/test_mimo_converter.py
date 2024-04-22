@@ -20,7 +20,7 @@ from oemof_industry.mimo_converter import (
 
 
 def test_invalid_flow_shares():
-    with pytest.raises(ValueError, match="Invalid flow share types found: {'maxx'}"):
+    with pytest.raises(ValueError, match="Invalid flow share or activity bound types found: {'maxx'}"):
         b_gas = Bus(label="gas")
         b_hydro = Bus(label="hydro")
         b_electricity = Bus(label="electricity")
@@ -234,7 +234,7 @@ def test_activity_bounds():
     es.add(
         Source(
             label="heat_import",
-            outputs={b_electricity: Flow(variable_costs=2000)},
+            outputs={b_heat: Flow(variable_costs=2000)},
         )
     )
 
@@ -260,14 +260,16 @@ def test_activity_bounds():
     # create result object
     results = processing.convert_keys_to_strings(processing.results(om))
 
-    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(100 * 0.8 * 1.2)
-    assert results[("gas", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(90 * 0.3 * 1.2)
-    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(100 * 0.2 * 1.3)
-    assert results[("hydro", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(90 * 0.7 * 1.3)
-    assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 100
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 0.8 * 1.2)
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(80 * 0.3 * 1.2)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 0.2 * 1.3)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(80 * 0.7 * 1.3)
+    assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 20
     assert results[("mimo", "electricity")]["sequences"]["flow"].values[1] == 0
     assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 0
-    assert results[("mimo", "heat")]["sequences"]["flow"].values[1] == 90
+    assert results[("mimo", "heat")]["sequences"]["flow"].values[1] == 80
+    assert results[("electricity_import", "electricity")]["sequences"]["flow"].values[0] == 80
+    assert results[("heat_import", "heat")]["sequences"]["flow"].values[1] == 10
 
 
 def test_emissions():

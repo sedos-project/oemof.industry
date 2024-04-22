@@ -720,6 +720,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         conversion_factors = self._init_efficiencies(buses, groups, kwargs)
         emission_factors = self._init_emissions(buses, groups, kwargs)
         flow_shares = self._init_facade_flow_shares(buses, kwargs)
+        activity_bounds = self._init_facade_activity_bounds(kwargs)
 
         super().__init__(
             inputs=inputs,
@@ -727,6 +728,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
             conversion_factors=conversion_factors,
             emission_factors=emission_factors,
             flow_shares=flow_shares,
+            activity_bounds=activity_bounds,
             **kwargs,
         )
 
@@ -877,3 +879,13 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     flow_shares[share_type] = {bus_entry: value}
                 kwargs.pop(key)
         return flow_shares
+
+    @staticmethod
+    def _init_facade_activity_bounds(kwargs):
+        activity_bounds = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("activity_bound"):
+                constraint_type = key.split("_")[2]
+                activity_bounds[constraint_type] = value
+                kwargs.pop(key)
+        return activity_bounds

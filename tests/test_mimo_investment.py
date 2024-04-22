@@ -75,6 +75,7 @@ def test_investment_fix_outputs():
             },
             conversion_factors={b_gas: 1.2, b_hydro: 1.3, b_heat: 1.2},
             flow_shares={"fix": {b_gas: [0.8, 0.3], b_heat: 0.8}},
+            activity_bounds={"max": 18}
         )
     )
 
@@ -87,11 +88,11 @@ def test_investment_fix_outputs():
     # create result object
     results = processing.convert_keys_to_strings(processing.results(om))
 
-    assert results[("mimo", "electricity")]["scalars"]["invest"] == 20
+    assert results[("mimo", "electricity")]["scalars"]["invest"] == 18
 
-    assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 20 * 0.8 * 1.2
-    assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == 100 - 20 * 0.8 * 1.2
-    assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 20
+    assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 18 * 0.8 * 1.2
+    assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == 100 - 18 * 0.8 * 1.2
+    assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 18
 
 
 def test_investment_var_outputs():
@@ -134,6 +135,7 @@ def test_investment_var_outputs():
             },
             conversion_factors={b_gas: 1.2, b_hydro: 1.3, b_heat: 1.2},
             flow_shares={"fix": {b_gas: [0.8, 0.3, 0.3]}},
+            activity_bounds={"max": 18}
         )
     )
 
@@ -150,10 +152,10 @@ def test_investment_var_outputs():
 
 
 def check_results_for_investment_var_output(results):
-    assert results[("mimo", "electricity")]["scalars"]["invest"] == 20
-    assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 20 * 1.2
-    assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == 100 - 20 * 1.2
+    assert results[("mimo", "electricity")]["scalars"]["invest"] == 18
+    assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == pytest.approx(18 * 1.2)
+    assert results[("heat_import", "heat")]["sequences"]["flow"].values[0] == pytest.approx(100 - 18 * 1.2)
     assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 0
 
-    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 1.2 * 0.8)
-    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 1.3 * 0.2)
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(18 * 1.2 * 0.8)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(18 * 1.3 * 0.2)

@@ -13,10 +13,7 @@ from oemof.solph.components import Sink
 from oemof.solph.components import Source
 from oemof.solph.flows import Flow
 
-from oemof_industry.mimo_converter import (
-    MultiInputMultiOutputConverter,
-    MultiInputMultiOutputConverterBlock,
-)
+from oemof_industry.mimo_converter import MultiInputMultiOutputConverter
 
 
 def test_invalid_flow_shares():

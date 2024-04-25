@@ -209,6 +209,11 @@
                         "format": "default"
                     },
                     {
+                        "name": "activity_bound_max",
+                        "type": "number",
+                        "format": "default"
+                    },
+                    {
                         "name": "emission_factor_gas_co2",
                         "type": "number",
                         "format": "default"

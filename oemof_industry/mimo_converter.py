@@ -36,7 +36,7 @@ from pyomo.core import BuildAction, Constraint
 from pyomo.core.base.block import ScalarBlock
 from pyomo.environ import NonNegativeReals, Set, Var
 
-FLOW_SHARE_TYPES = ("min", "max", "fix")
+CONSTRAINT_TYPES = ("min", "max", "fix")
 
 
 class MultiInputMultiOutputConverter(Node):
@@ -124,6 +124,7 @@ class MultiInputMultiOutputConverter(Node):
         conversion_factors=None,
         emission_factors=None,
         flow_shares=None,
+        activity_bounds=None,
         custom_attributes=None,
         **kwargs,
     ):
@@ -174,8 +175,25 @@ class MultiInputMultiOutputConverter(Node):
         )
 
         self.conversion_factors = self._init_conversion_factors(conversion_factors)
+        self._init_flow_shares(flow_shares, inputs, outputs)
+        self._init_activity_bounds(activity_bounds)
 
-        self._check_flow_shares(flow_shares)
+    def _init_flow_shares(self, flow_shares, inputs, outputs):
+        flow_shares = {} if flow_shares is None else flow_shares
+        self._check_constraint_types(flow_shares)
+
+        # Check if fix flow share is combined with min or max flow share
+        if "fix" in flow_shares:
+            for node in flow_shares["fix"]:
+                if "min" in flow_shares and node in flow_shares["min"]:
+                    raise ValueError(
+                        "Cannot combine 'fix' and 'min' flow share for same " "node."
+                    )
+                if "max" in flow_shares and node in flow_shares["max"]:
+                    raise ValueError(
+                        "Cannot combine 'fix' and 'max' flow share for same " "node."
+                    )
+
         flow_shares = self._init_group(flow_shares)
         self.input_flow_shares = {
             flow_type: {
@@ -220,29 +238,25 @@ class MultiInputMultiOutputConverter(Node):
         return conversion_factors
 
     @staticmethod
-    def _check_flow_shares(flow_shares):
-        if flow_shares is None:
-            return
-
-        # Check for invalid share types
-        invalid_flow_share_types = set(flow_shares) - set(FLOW_SHARE_TYPES)
-        if invalid_flow_share_types:
+    def _check_constraint_types(parameter):
+        # Check for invalid constraint types
+        invalid_constraint_types = set(parameter) - set(CONSTRAINT_TYPES)
+        if invalid_constraint_types:
             raise ValueError(
-                f"Invalid flow share types found: {invalid_flow_share_types}. "
+                f"Invalid flow share or activity bound types found: {invalid_constraint_types}. "
                 "Must be one of 'min', 'max' or 'fix'."
             )
 
-        # Check if fix flow share is combined with min or max flow share
-        if "fix" in flow_shares:
-            for node in flow_shares["fix"]:
-                if "min" in flow_shares and node in flow_shares["min"]:
-                    raise ValueError(
-                        "Cannot combine 'fix' and 'min' flow share for same " "node."
-                    )
-                if "max" in flow_shares and node in flow_shares["max"]:
-                    raise ValueError(
-                        "Cannot combine 'fix' and 'max' flow share for same " "node."
-                    )
+    def _init_activity_bounds(self, activity_bounds):
+        activity_bounds = {} if activity_bounds is None else activity_bounds
+
+        self._check_constraint_types(activity_bounds)
+        if "fix" in activity_bounds and ("min" in activity_bounds or "max" in activity_bounds):
+            raise ValueError(
+                "Invalid activity bounds found. Cannot set 'fix' in combination with 'min' or 'max'."
+            )
+
+        self.activity_bounds = {key: sequence(value) for key, value in activity_bounds.items()}
 
     @staticmethod
     def _init_group(
@@ -535,22 +549,22 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
             rule=_input_output_group_relation
         )
 
-        def _get_operator_from_flow_share_type(flow_share_type):
-            if flow_share_type == "min":
+        def _get_operator_from_constraint_type(constraint_type):
+            if constraint_type == "min":
                 return operator.ge
-            if flow_share_type == "max":
+            if constraint_type == "max":
                 return operator.le
-            if flow_share_type == "fix":
+            if constraint_type == "fix":
                 return operator.eq
-            raise ValueError(f"Unknown flow share type: {flow_share_type}")
+            raise ValueError(f"Unknown constraint type: {constraint_type}")
 
         self.input_flow_share_relation = Constraint(
             [
-                (n, i, s, p, t)
+                (n, i, c, p, t)
                 for p, t in m.TIMEINDEX
                 for n in group
                 for i in n.inputs
-                for s in FLOW_SHARE_TYPES
+                for c in CONSTRAINT_TYPES
             ],
             noruleinit=True,
         )
@@ -559,7 +573,7 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
             for p, t in m.TIMEINDEX:
                 for n in group:
                     for flow_share_type, shares in n.input_flow_shares.items():
-                        op = _get_operator_from_flow_share_type(flow_share_type)
+                        op = _get_operator_from_constraint_type(flow_share_type)
                         for i, flow_share in shares.items():
                             # Find related input group for given input node:
                             g = next(
@@ -578,11 +592,11 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
         self.output_flow_share_relation = Constraint(
             [
-                (n, o, s, p, t)
+                (n, o, c, p, t)
                 for p, t in m.TIMEINDEX
                 for n in group
                 for o in n.outputs
-                for s in FLOW_SHARE_TYPES
+                for c in CONSTRAINT_TYPES
             ],
             noruleinit=True,
         )
@@ -594,7 +608,7 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
                         flow_share_type,
                         shares,
                     ) in n.output_flow_shares.items():
-                        op = _get_operator_from_flow_share_type(flow_share_type)
+                        op = _get_operator_from_constraint_type(flow_share_type)
                         for o, flow_share in shares.items():
                             # Find related output group for given input node:
                             g = next(
@@ -646,6 +660,33 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
         self.emission_relation_build = BuildAction(rule=_emission_relation)
 
+        self.output_activity_bound_relation = Constraint(
+            [
+                (n, c, p, t)
+                for p, t in m.TIMEINDEX
+                for n in group
+                for c in CONSTRAINT_TYPES
+            ],
+            noruleinit=True,
+        )
+
+        def _output_activity_bound_relation(block):
+            for p, t in m.TIMEINDEX:
+                for n in group:
+                    for constraint_type, activity_bound in n.activity_bounds.items():
+                        op = _get_operator_from_constraint_type(constraint_type)
+                        g = list(n.output_groups)[0]
+                        lhs = block.OUTPUT_GROUP_FLOW[n, g, p, t]
+                        rhs = activity_bound[t]
+                        block.output_activity_bound_relation.add(
+                            (n, constraint_type, p, t),
+                            op(lhs, rhs),
+                        )
+
+        self.output_activity_bound_relation_build = BuildAction(
+            rule=_output_activity_bound_relation
+        )
+
 
 @dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
@@ -678,7 +719,8 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         inputs, outputs = self._init_inputs_and_outputs(buses, kwargs)
         conversion_factors = self._init_efficiencies(buses, groups, kwargs)
         emission_factors = self._init_emissions(buses, groups, kwargs)
-        flow_shares = self._init_flow_shares(buses, kwargs)
+        flow_shares = self._init_facade_flow_shares(buses, kwargs)
+        activity_bounds = self._init_facade_activity_bounds(kwargs)
 
         super().__init__(
             inputs=inputs,
@@ -686,6 +728,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
             conversion_factors=conversion_factors,
             emission_factors=emission_factors,
             flow_shares=flow_shares,
+            activity_bounds=activity_bounds,
             **kwargs,
         )
 
@@ -816,7 +859,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         return emission_factors
 
     @staticmethod
-    def _init_flow_shares(buses, kwargs):
+    def _init_facade_flow_shares(buses, kwargs):
         flow_shares = {}
         for key, value in list(kwargs.items()):
             if key.startswith("flow_share"):
@@ -836,3 +879,13 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     flow_shares[share_type] = {bus_entry: value}
                 kwargs.pop(key)
         return flow_shares
+
+    @staticmethod
+    def _init_facade_activity_bounds(kwargs):
+        activity_bounds = {}
+        for key, value in list(kwargs.items()):
+            if key.startswith("activity_bound"):
+                constraint_type = key.split("_")[2]
+                activity_bounds[constraint_type] = value
+                kwargs.pop(key)
+        return activity_bounds

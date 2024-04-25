@@ -13,11 +13,11 @@ from oemof.solph.components import Sink
 from oemof.solph.components import Source
 from oemof.solph.flows import Flow
 
-from oemof_industry.mimo_converter import MultiInputMultiOutputConverter, MultiInputMultiOutputConverterBlock
+from oemof_industry.mimo_converter import MultiInputMultiOutputConverter
 
 
 def test_invalid_flow_shares():
-    with pytest.raises(ValueError, match="Invalid flow share types found: {'maxx'}"):
+    with pytest.raises(ValueError, match="Invalid flow share or activity bound types found: {'maxx'}"):
         b_gas = Bus(label="gas")
         b_hydro = Bus(label="hydro")
         b_electricity = Bus(label="electricity")
@@ -122,7 +122,14 @@ def test_flow_shares():
     # resources
     b_gas = Bus(label="gas")
     es.add(b_gas)
-    es.add(Source(label="gas_station", outputs={b_gas: Flow(nominal_value=Investment(ep_costs=1), variable_costs=20)}))
+    es.add(
+        Source(
+            label="gas_station",
+            outputs={
+                b_gas: Flow(nominal_value=Investment(ep_costs=1), variable_costs=20)
+            },
+        )
+    )
 
     b_hydro = Bus(label="hydro")
     es.add(b_hydro)
@@ -175,6 +182,91 @@ def test_flow_shares():
     assert results[("mimo", "heat")]["sequences"]["flow"].values[1] == 80
     assert results[("mimo", "heat_low")]["sequences"]["flow"].values[0] == 20
     assert results[("mimo", "heat_low")]["sequences"]["flow"].values[1] == 20
+
+
+def test_activity_bounds():
+    idx = pd.date_range("1/1/2017", periods=2, freq="H")
+    es = EnergySystem(timeindex=idx)
+
+    # resources
+    b_gas = Bus(label="gas")
+    es.add(b_gas)
+    es.add(
+        Source(
+            label="gas_station",
+            outputs={
+                b_gas: Flow(nominal_value=Investment(ep_costs=1), variable_costs=20)
+            },
+        )
+    )
+
+    b_hydro = Bus(label="hydro")
+    es.add(b_hydro)
+    es.add(Source(label="hydro_station", outputs={b_hydro: Flow(variable_costs=20)}))
+
+    b_electricity = Bus(label="electricity")
+    es.add(b_electricity)
+
+    b_heat = Bus(label="heat")
+    es.add(b_heat)
+
+    es.add(
+        Sink(
+            label="demand",
+            inputs={b_electricity: Flow(fix=[100, 0], nominal_value=1)},
+        )
+    )
+    es.add(
+        Sink(
+            label="heat_demand",
+            inputs={b_heat: Flow(fix=[0, 90], nominal_value=1)},
+        )
+    )
+    es.add(
+        Source(
+            label="electricity_import",
+            outputs={b_electricity: Flow(variable_costs=2000)},
+        )
+    )
+    es.add(
+        Source(
+            label="heat_import",
+            outputs={b_heat: Flow(variable_costs=2000)},
+        )
+    )
+
+    es.add(
+        MultiInputMultiOutputConverter(
+            label="mimo",
+            inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
+            outputs={
+                "out": {b_electricity: Flow(), b_heat: Flow()},
+            },
+            conversion_factors={b_gas: 1.2, b_hydro: 1.3},
+            activity_bounds={"max": [20, 80]},
+            flow_shares={"fix": {b_gas: [0.8, 0.3]}},
+        )
+    )
+
+    # create an optimization problem and solve it
+    om = Model(es)
+
+    # solve model
+    om.solve(solver="cbc")
+
+    # create result object
+    results = processing.convert_keys_to_strings(processing.results(om))
+
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 0.8 * 1.2)
+    assert results[("gas", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(80 * 0.3 * 1.2)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[0] == pytest.approx(20 * 0.2 * 1.3)
+    assert results[("hydro", "mimo")]["sequences"]["flow"].values[1] == pytest.approx(80 * 0.7 * 1.3)
+    assert results[("mimo", "electricity")]["sequences"]["flow"].values[0] == 20
+    assert results[("mimo", "electricity")]["sequences"]["flow"].values[1] == 0
+    assert results[("mimo", "heat")]["sequences"]["flow"].values[0] == 0
+    assert results[("mimo", "heat")]["sequences"]["flow"].values[1] == 80
+    assert results[("electricity_import", "electricity")]["sequences"]["flow"].values[0] == 80
+    assert results[("heat_import", "heat")]["sequences"]["flow"].values[1] == 10
 
 
 def test_emissions():
@@ -835,62 +927,62 @@ def check_results_for_IIS_CHPSTMGAS101_LB(results):
     # INPUTS
     # Gas
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               0
-           ] == pytest.approx(5.4945, abs=1e-3)
+        0
+    ] == pytest.approx(5.4945, abs=1e-3)
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               1
-           ] == pytest.approx(0)
+        1
+    ] == pytest.approx(0)
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               2
-           ] == pytest.approx(0)
+        2
+    ] == pytest.approx(0)
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               3
-           ] == pytest.approx(0)
+        3
+    ] == pytest.approx(0)
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               4
-           ] == pytest.approx(0)
+        4
+    ] == pytest.approx(0)
     assert results[("IISGAS-LB", "mimo")]["sequences"]["flow"].values[
-               5
-           ] == pytest.approx(0)
+        5
+    ] == pytest.approx(0)
     # Hydro
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               0
-           ] == pytest.approx(5.4945, abs=1e-2)
+        0
+    ] == pytest.approx(5.4945, abs=1e-2)
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               1
-           ] == pytest.approx(10.8696, abs=1e-3)
+        1
+    ] == pytest.approx(10.8696, abs=1e-3)
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               2
-           ] == pytest.approx(10.8696, abs=1e-3)
+        2
+    ] == pytest.approx(10.8696, abs=1e-3)
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               3
-           ] == pytest.approx(10.8696, abs=1e-3)
+        3
+    ] == pytest.approx(10.8696, abs=1e-3)
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               4
-           ] == pytest.approx(10.8696, abs=1e-3)
+        4
+    ] == pytest.approx(10.8696, abs=1e-3)
     assert results[("IISHH2-LB", "mimo")]["sequences"]["flow"].values[
-               5
-           ] == pytest.approx(10.8696, abs=1e-3)
+        5
+    ] == pytest.approx(10.8696, abs=1e-3)
     # OUTPUTS
     # Heat (Primary)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               0
-           ] == pytest.approx(5.0206)
+        0
+    ] == pytest.approx(5.0206)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               1
-           ] == pytest.approx(4.9184)
+        1
+    ] == pytest.approx(4.9184)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               2
-           ] == pytest.approx(4.9082)
+        2
+    ] == pytest.approx(4.9082)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               3
-           ] == pytest.approx(4.898)
+        3
+    ] == pytest.approx(4.898)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               4
-           ] == pytest.approx(4.898)
+        4
+    ] == pytest.approx(4.898)
     assert results[("mimo", "IISHTH-LB")]["sequences"]["flow"].values[
-               5
-           ] == pytest.approx(4.898)
+        5
+    ] == pytest.approx(4.898)
     # CH4
     assert results[("mimo", "INDCH4N")]["sequences"]["flow"].values[0] == pytest.approx(
         0.0149, abs=1e-3

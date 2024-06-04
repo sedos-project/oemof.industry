@@ -796,7 +796,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 outputs[bus] = create_flow(bus)
                 kwargs.pop(key)
 
-        kwargs.pop("groups")
+        kwargs.pop("groups", None)
         return inputs, outputs
 
     @staticmethod

@@ -63,3 +63,22 @@ def test_datapackage_results_for_investment_var_outputs():
     assert results[("mimo", "co2")]["sequences"]["flow"].values[0] == pytest.approx(
         gas_input * 0.5 + hydro_input * 0.3
     )
+
+
+def test_saltwater_datapackage():
+    datapackage_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "saltwater"
+        / "datapackage.json"
+    )
+    es = EnergySystem.from_datapackage(
+        str(datapackage_path), attributemap={}, typemap=TYPEMAP
+    )
+
+    m = Model(es)
+    m.solve("cbc")
+
+    results = processing.convert_keys_to_strings(processing.results(m))
+    check_results_for_IIS_CHPSTMGAS101_LB(results)

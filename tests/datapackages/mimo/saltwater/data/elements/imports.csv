@@ -1,0 +1,3 @@
+type;carrier;marginal_cost;name;bus;amount
+commodity;seawater;0.33;seawater-import;seawater-bus;100000
+commodity;seawater;0.33;electricity-import;ac-elec-bus;100000

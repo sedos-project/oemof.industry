@@ -144,8 +144,8 @@ class MultiInputMultiOutputConverter(Node):
             if node in self.emission_factors
         }
 
-        self.input_groups = self._unify_groups(inputs)
-        self.output_groups = self._unify_groups(outputs, exclude=emissions)
+        self.input_groups = self._unify_groups(inputs, "in")
+        self.output_groups = self._unify_groups(outputs, "out", exclude=emissions)
 
         inputs = reduce(operator.ior, self.input_groups.values(), {})
         # Add emissions to outputs (as they are excluded from output groups before)
@@ -287,6 +287,7 @@ class MultiInputMultiOutputConverter(Node):
     @staticmethod
     def _unify_groups(
         flows: Union[Dict[Bus, Flow], Dict[str, Dict[Bus, Flow]]],
+        direction: str,
         exclude: Iterable[str] = None,
     ) -> Dict[str, Dict[Bus, Flow]]:
         """
@@ -301,6 +302,8 @@ class MultiInputMultiOutputConverter(Node):
             1. a dict of groups, containing buses with related flows
             2. a dict of buses and related flows (as in default converter)
             3. a mix of option 1 and 2
+        direction : str
+            To differentiate between input and output flows.
         exclude: Iterable[str]
             List of nodes to exclude from grouping
             (needed to exclude emission buses from grouping)
@@ -316,7 +319,7 @@ class MultiInputMultiOutputConverter(Node):
             if exclude and key in exclude:
                 continue
             if isinstance(key, Bus):
-                new_group = f"group_{group_counter}"
+                new_group = f"{direction}_group_{group_counter}"
                 group_dict[new_group] = {key: flow}
                 group_counter += 1
             else:

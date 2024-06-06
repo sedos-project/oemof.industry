@@ -703,6 +703,11 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
     tech: str
 
     def __init__(self, **kwargs):
+        if "primary" in kwargs and not isinstance(kwargs["primary"], str):
+            raise TypeError(
+                "Primary key must be given as string, not as Bus component. "
+                "Eventually, you must remove field 'primary' from foreign keys in datapackage.json."
+            )
         buses = {
             key: value
             for key, value in kwargs.items()

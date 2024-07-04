@@ -37,7 +37,7 @@ class CO2EmissionLimit(ConstraintFacade):
                 ch4_flows * self.ch4_equivalent +
                 n2o_flows * self.n2o_equivalent - neg_co2_flows
             )
-            return expr >= self.co2_limit
+            return expr <= self.co2_limit
 
         model.co2_emission_limit = po.Constraint(
             rule=co2_emission_rule

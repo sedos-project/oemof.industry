@@ -1,46 +1,95 @@
+import pathlib
+import pytest
 import pandas as pd
-from oemof.solph import helpers
+import warnings
 
-from oemof import solph
-from oemof.tabular.facades import Conversion
-from oemof_industry.emission_constraint import CO2EmissionLimit
+from oemof.solph import EnergySystem, Model, processing
+from oemof.tabular import datapackage  # noqa
+from oemof.tabular.facades import Conversion, Load, Bus, Commodity, Excess
+
+from oemof_industry.mimo_converter import MIMO
+from tests.test_mimo_converter import check_results_for_IIS_CHPSTMGAS101_LB
+from oemof_industry.emission_constraint import CONSTRAINT_TYPE_MAP
+
+TYPEMAP = {
+    "bus": Bus,
+    "commodity": Commodity,
+    "conversion": Conversion,
+    "excess": Excess,
+    "load": Load,
+    "mimo": MIMO,
+}
 
 
-def test_emission_constraint():
-    date_time_index = pd.date_range("1/1/2012", periods=3, freq="H")
-    tmpdir = helpers.extend_basic_path("tmp")
-    energysystem = solph.EnergySystem(
-        groupings=solph.GROUPINGS, timeindex=date_time_index
+def test_emission_constraint_IIS_CHPSTMGAS101_LB():
+    datapackage_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "IIS_CHPSTMGAS101_LB"
+        / "datapackage.json"
     )
-#
-    bus_biomass = solph.Bus("biomass")
-    bus_heat = solph.Bus("heat")
-    bus_co2_em = solph.Bus("co2_em")
-    bus_ch4_em = solph.Bus("ch4_em")
-
-    conversion = Conversion(
-        label="biomass_plant",
-        carrier="biomass",
-        tech="st",
-        from_bus=bus_biomass,
-        to_bus=bus_heat,
-        emissions={bus_co2_em: 0.5, bus_ch4_em: 10},
-        capacity=100,
-        efficiency=0.4,
-    )
-
-    emission_constraint = CO2EmissionLimit(
-        name="emission_constraint",
-        type="co2_emission_limit",
-        co2_limit=1000,
-        ch4_equivalent=25,
-        n2o_equivalent=298,
-        co2_commodities=["co2_em"],
-        ch4_commodities=["ch4_em"],
+    es = EnergySystem.from_datapackage(
+        str(datapackage_path), attributemap={}, typemap=TYPEMAP
     )
 
-    energysystem.add(bus_biomass, bus_heat, bus_co2_em, bus_ch4_em, conversion)
-    model = solph.Model(energysystem)
+    m = Model(es)
+    m.add_constraints_from_datapackage(str(datapackage_path),
+                                       constraint_type_map=CONSTRAINT_TYPE_MAP)
 
-    emission_constraint.build_constraint(model)
+    m.solve(solver="cbc")
+    results = processing.convert_keys_to_strings(processing.results(m))
+    check_results_for_IIS_CHPSTMGAS101_LB(results)
 
+
+def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
+    datapackage_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "IIS_CHPSTMGAS101_LB"
+        / "datapackage.json"
+    )
+    es = EnergySystem.from_datapackage(
+        str(datapackage_path), attributemap={}, typemap=TYPEMAP
+    )
+
+    m = Model(es)
+
+    # manipulate co2 limit to make problem infeasible
+    emi_path = (
+        pathlib.Path(__file__).parent
+        / "datapackages"
+        / "mimo"
+        / "IIS_CHPSTMGAS101_LB"
+        / "data"
+        / "constraints"
+        / "emission_constraint.csv"
+    )
+    emission_constraint_orig = pd.read_csv(emi_path, sep=";", index_col=0)
+    emission_constraint = emission_constraint_orig.copy()
+    emission_constraint["co2_limit"] = 0
+    emission_constraint.to_csv(emi_path, sep=";")
+
+    m.add_constraints_from_datapackage(str(datapackage_path),
+                                       constraint_type_map=CONSTRAINT_TYPE_MAP)
+    # revoke chances in csv
+    emission_constraint_orig.to_csv(emi_path, sep=";")
+
+    with pytest.raises(RuntimeError):
+        # turn warnings into errors  todo contribution to MVS
+        warnings.filterwarnings("error")
+        warnings.filterwarnings("always", category=FutureWarning)
+        try:
+            m.solve(solver="cbc")
+            results = processing.convert_keys_to_strings(processing.results(m))
+            check_results_for_IIS_CHPSTMGAS101_LB(results)
+        except UserWarning as e:
+            error_message = str(e)
+            infeasible_msg = "termination condition infeasible"
+            if infeasible_msg in error_message:
+                raise RuntimeError(error_message) from None
+            else:
+                raise e
+        # stop turning warnings into errors
+        warnings.resetwarnings()

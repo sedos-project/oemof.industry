@@ -9,7 +9,8 @@ from oemof.tabular.facades import Conversion, Load, Bus, Commodity, Excess
 
 from oemof_industry.mimo_converter import MIMO
 from tests.test_mimo_converter import check_results_for_IIS_CHPSTMGAS101_LB
-from oemof_industry.emission_constraint import CONSTRAINT_TYPE_MAP
+from oemof_industry.emission_constraint import (CONSTRAINT_TYPE_MAP,
+                                                CO2EmissionLimit)
 
 TYPEMAP = {
     "bus": Bus,
@@ -56,25 +57,21 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
 
     m = Model(es)
 
-    # manipulate co2 limit to make problem infeasible
-    emi_path = (
-        pathlib.Path(__file__).parent
-        / "datapackages"
-        / "mimo"
-        / "IIS_CHPSTMGAS101_LB"
-        / "data"
-        / "constraints"
-        / "emission_constraint.csv"
-    )
-    emission_constraint_orig = pd.read_csv(emi_path, sep=";", index_col=0)
-    emission_constraint = emission_constraint_orig.copy()
-    emission_constraint["co2_limit"] = 0
-    emission_constraint.to_csv(emi_path, sep=";")
+    # todo add bus INDCO2N_GAS to bus.csv and import_gas.csv and co2_unused_sink.csv.
 
-    m.add_constraints_from_datapackage(str(datapackage_path),
-                                       constraint_type_map=CONSTRAINT_TYPE_MAP)
-    # revoke chances in csv
-    emission_constraint_orig.to_csv(emi_path, sep=";")
+    # add emission constraint with low co2 limit to make problem infeasible
+    emission_constraint = CO2EmissionLimit(
+        type="co2_emission_limit",
+        co2_limit=10,
+        ch4_equivalent=25,
+        n2o_equivalent=298,
+        commodities={
+            "co2_commodities": ["INDCO2N"],
+            "ch4_commodities": ["INDCH4N"],
+            "n2o_commodities": ["INDN2ON"]
+        }
+    )
+    emission_constraint.build_constraint(m)
 
     with pytest.raises(RuntimeError):
         # turn warnings into errors  todo contribution to MVS

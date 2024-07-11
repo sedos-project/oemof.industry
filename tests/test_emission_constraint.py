@@ -39,6 +39,10 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB():
                                        constraint_type_map=CONSTRAINT_TYPE_MAP)
 
     m.solve(solver="cbc")
+
+    termination_condition = m.solver_results["Solver"][0]["Termination condition"]
+    assert termination_condition == "optimal"
+
     results = processing.convert_keys_to_strings(processing.results(m))
     check_results_for_IIS_CHPSTMGAS101_LB(results)
 
@@ -73,20 +77,7 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
     )
     emission_constraint.build_constraint(m)
 
-    with pytest.raises(RuntimeError):
-        # turn warnings into errors  todo contribution to MVS
-        warnings.filterwarnings("error")
-        warnings.filterwarnings("always", category=FutureWarning)
-        try:
-            m.solve(solver="cbc")
-            results = processing.convert_keys_to_strings(processing.results(m))
-            check_results_for_IIS_CHPSTMGAS101_LB(results)
-        except UserWarning as e:
-            error_message = str(e)
-            infeasible_msg = "termination condition infeasible"
-            if infeasible_msg in error_message:
-                raise RuntimeError(error_message) from None
-            else:
-                raise e
-        # stop turning warnings into errors
-        warnings.resetwarnings()
+    m.solve(solver="cbc")
+
+    termination_condition = m.solver_results["Solver"][0]["Termination condition"]
+    assert termination_condition == "infeasible"

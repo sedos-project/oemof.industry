@@ -7,8 +7,8 @@ from oemof.tabular.constraint_facades import ConstraintFacade
 class CO2EmissionLimit(ConstraintFacade):
     type: str
     co2_limit: float
-    ch4_equivalent: float
-    n2o_equivalent: float
+    ch4_equivalent: float = 25
+    n2o_equivalent: float = 298
     commodities: dict = field(default_factory=dict)
 
     def build_constraint(self, model):

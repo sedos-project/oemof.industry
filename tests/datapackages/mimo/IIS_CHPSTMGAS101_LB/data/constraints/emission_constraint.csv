@@ -1,2 +1,2 @@
-type;co2_limit;ch4_equivalent;n2o_equivalent;commodities
+type;co2_limit;ch4_factor;n2o_factor;commodities
 co2_emission_limit;360;25;298;{"co2_commodities": ["INDCO2N"], "ch4_commodities": ["INDCH4N"], "n2o_commodities": ["INDN2ON"]}

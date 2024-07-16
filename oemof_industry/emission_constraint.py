@@ -25,12 +25,12 @@ class CO2EmissionLimit(ConstraintFacade):
         Needs to be "co2_emission_limit" according to `CONSTRAINT_TYPE_MAP`
     co2_limit : float
         Maximum CO2 equivalent emission limit.
-    ch4_equivalent : float
+    ch4_factor : float
         Factor for calculating the CO2 equivalent of CH4 emissions. If not
         supplied, the global-warming potential (GWP) of 25 is used. Source e.g.
         https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:Carbon_dioxide_equivalent
         Default: 25
-    n2o_equivalent : float
+    n2o_factor : float
         Factor for calculating the CO2 equivalent of N2O emissions. If not
         supplied, the global-warming potential (GWP) of 298 is used. Source:
         https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:Carbon_dioxide_equivalent
@@ -46,8 +46,8 @@ class CO2EmissionLimit(ConstraintFacade):
     """
     type: str
     co2_limit: float
-    ch4_equivalent: float = 25
-    n2o_equivalent: float = 298
+    ch4_factor: float = 25
+    n2o_factor: float = 298
     commodities: dict = field(default_factory=dict)
 
     def build_constraint(self, model):
@@ -62,10 +62,10 @@ class CO2EmissionLimit(ConstraintFacade):
 
         def co2_emission_rule(model):
             expr = (
-                flows["co2_commodities"] +
-                flows["ch4_commodities"] * self.ch4_equivalent +
-                flows["n2o_commodities"] * self.n2o_equivalent -
-                flows["negative_co2_commodities"]
+                    flows["co2_commodities"] +
+                    flows["ch4_commodities"] * self.ch4_factor +
+                    flows["n2o_commodities"] * self.n2o_factor -
+                    flows["negative_co2_commodities"]
             )
             return expr <= self.co2_limit
 

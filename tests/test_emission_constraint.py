@@ -67,8 +67,8 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
     emission_constraint = CO2EmissionLimit(
         type="co2_emission_limit",
         co2_limit=10,
-        ch4_equivalent=25,
-        n2o_equivalent=298,
+        ch4_factor=25,
+        n2o_factor=298,
         commodities={
             "co2_commodities": ["INDCO2N"],
             "ch4_commodities": ["INDCH4N"],

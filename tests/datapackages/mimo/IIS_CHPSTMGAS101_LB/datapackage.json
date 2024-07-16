@@ -23,12 +23,12 @@
                         "format": "default"
                     },
                     {
-                        "name": "ch4_equivalent",
+                        "name": "ch4_factor",
                         "type": "integer",
                         "format": "default"
                     },
                     {
-                        "name": "n2o_equivalent",
+                        "name": "n2o_factor",
                         "type": "integer",
                         "format": "default"
                     },

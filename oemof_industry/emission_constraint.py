@@ -43,6 +43,64 @@ class CO2EmissionLimit(ConstraintFacade):
         Naming convention: allowed keys are "co2_commodities",
         "ch4_commodities", "n2o_commodities", "negative_co2_commodities".
 
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from oemof.solph import EnergySystem, Model, processing
+    >>> from oemof.solph.flows import Flow
+    >>> from oemof.solph.components import Source, Sink
+    >>> from oemof.solph.buses import Bus
+    >>> from oemof_industry.mimo_converter import MultiInputMultiOutputConverter
+    >>> from oemof_industry.emission_constraint import CO2EmissionLimit
+
+    >>> idx = pd.date_range("1/1/2017", periods=2, freq="H")
+    >>> es = EnergySystem(timeindex=idx)
+
+    >>> # Buses
+    >>> b_gas = Bus(label="gas", balanced=False)
+    >>> b_hydro = Bus(label="hydro", balanced=False)
+    >>> b_electricity = Bus(label="electricity")
+    >>> b_co2 = Bus(label="co2", balanced=False)
+    >>> b_ch4 = Bus(label="ch4", balanced=False)
+
+    >>> # Components
+    >>> load_el = Sink(
+    ...        label="demand",
+    ...        inputs={b_electricity: Flow(fix=[100, 100], nominal_value=1)})
+    >>> mimo = MultiInputMultiOutputConverter(
+    ...    label="mimo",
+    ...    inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
+    ...    outputs={
+    ...        b_electricity: Flow(),
+    ...        b_co2: Flow(),
+    ...        b_ch4: Flow(),
+    ...    },
+    ...    emission_factors={
+    ...        b_co2: {b_gas: 0.8, b_hydro: 0.6},
+    ...        b_ch4: {b_gas: 0.4, b_hydro: 0.2},
+    ...    },
+    ...    conversion_factors={b_gas: 1.2, b_hydro: 1.3})
+
+    >>> # Emission constraint
+    >>> emission_constraint = CO2EmissionLimit(
+    ...    type="co2_emission_limit",
+    ...    co2_limit=10000,
+    ...    ch4_factor=25,
+    ...    n2o_factor=298,
+    ...    commodities={"co2_commodities": ["co2"],
+    ...                 "ch4_commodities": ["ch4"]})
+
+    >>> es.add(b_gas, b_hydro, b_electricity, load_el, b_co2, b_ch4, mimo)
+
+    >>> # create an optimization problem
+    >>> om = Model(es)
+
+    >>> # Build emission constraint
+    >>> emission_constraint.build_constraint(om)
+
+    >>> print(om.co2_emission_limit.expr)
+    flow[mimo, co2, 0, 0] + flow[mimo, co2, 0, 1] + (flow[mimo, ch4, 0, 0] + flow[mimo, ch4, 0, 1]) * 25 <= 10000
+
     """
     type: str
     co2_limit: float

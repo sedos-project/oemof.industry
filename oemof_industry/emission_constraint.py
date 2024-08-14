@@ -27,14 +27,14 @@ class CO2EmissionLimit(ConstraintFacade):
         Maximum CO2 equivalent emission limit.
     ch4_factor : float
         Factor for calculating the CO2 equivalent of CH4 emissions. If not
-        supplied, the global-warming potential (GWP) of 25 is used. Source e.g.
-        https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:Carbon_dioxide_equivalent
-        Default: 25
+        supplied, the global-warming potential (GWP) of 28 is used, according
+        to IPCC AR5 https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
+        Default: 28
     n2o_factor : float
         Factor for calculating the CO2 equivalent of N2O emissions. If not
-        supplied, the global-warming potential (GWP) of 298 is used. Source:
-        https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:Carbon_dioxide_equivalent
-        Default: 298
+        supplied, the global-warming potential (GWP) of 265 is used, according
+        to IPCC AR5 https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
+        Default: 265
     commodities : dict
         Contains key-value-pair of the CO2, CH4, N2O and negative CO2 emission
         commodities to be considered in the emission constraint and their
@@ -85,8 +85,8 @@ class CO2EmissionLimit(ConstraintFacade):
     >>> emission_constraint = CO2EmissionLimit(
     ...    type="co2_emission_limit",
     ...    co2_limit=10000,
-    ...    ch4_factor=25,
-    ...    n2o_factor=298,
+    ...    ch4_factor=28,
+    ...    n2o_factor=265,
     ...    commodities={"co2_commodities": ["co2"],
     ...                 "ch4_commodities": ["ch4"]})
 
@@ -104,8 +104,8 @@ class CO2EmissionLimit(ConstraintFacade):
     """
     type: str
     co2_limit: float
-    ch4_factor: float = 25
-    n2o_factor: float = 298
+    ch4_factor: float = 258
+    n2o_factor: float = 265
     commodities: dict = field(default_factory=dict)
 
     def build_constraint(self, model):

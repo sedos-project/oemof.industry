@@ -46,6 +46,14 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB():
     results = processing.convert_keys_to_strings(processing.results(m))
     check_results_for_IIS_CHPSTMGAS101_LB(results)
 
+    co2_eq = (
+        results[("mimo", "INDCO2N")]["sequences"]["flow"].sum()
+        + 28 * results[("mimo", "INDCH4N")]["sequences"]["flow"].sum()
+        + 265 * results[("mimo", "INDN2ON")]["sequences"]["flow"].sum()
+    )
+
+    assert co2_eq <= 360
+
 
 def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
     datapackage_path = (

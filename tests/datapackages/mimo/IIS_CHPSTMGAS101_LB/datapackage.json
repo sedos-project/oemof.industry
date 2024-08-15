@@ -4,6 +4,46 @@
     "oemof_tabular_version": "0.0.5dev",
     "resources": [
         {
+            "path": "data/constraints/emission_constraint.csv",
+            "profile": "tabular-data-resource",
+            "name": "emission_constraint",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "co2_limit",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "ch4_factor",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "n2o_factor",
+                        "type": "integer",
+                        "format": "default"
+                    },
+                    {
+                        "name": "commodities",
+                        "type": "object",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ]
+            }
+        },
+        {
             "path": "data/elements/bus.csv",
             "profile": "tabular-data-resource",
             "name": "bus",

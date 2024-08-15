@@ -3,6 +3,6 @@ IISGAS-LB;bus;True
 IISHH2-LB;bus;True
 IISELC-LB;bus;True
 IISHTH-LB;bus;True
-INDCO2N;bus;True
-INDCH4N;bus;True
-INDN2ON;bus;True
+INDCO2N;bus;False
+INDCH4N;bus;False
+INDN2ON;bus;False

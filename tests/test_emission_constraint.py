@@ -61,8 +61,6 @@ def test_emission_constraint_IIS_CHPSTMGAS101_LB_infeasible():
 
     m = Model(es)
 
-    # todo add bus INDCO2N_GAS to bus.csv and import_gas.csv and co2_unused_sink.csv.
-
     # add emission constraint with low co2 limit to make problem infeasible
     emission_constraint = CO2EmissionLimit(
         type="co2_emission_limit",

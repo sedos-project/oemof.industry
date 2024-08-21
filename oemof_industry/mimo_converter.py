@@ -53,9 +53,6 @@ class MultiInputMultiOutputConverter(Node):
     outputs : dict
         Dictionary with outflows. Keys must be the ending node(s) of the
         outflow(s).
-    emissions : dict
-        Dictionary with emission outflows, holding a dict with contributing
-        input nodes and related conversion factors.
     conversion_factors : dict
         Dictionary containing conversion factors for conversion of each flow.
         Keys must be the connected nodes (typically Buses).
@@ -63,51 +60,69 @@ class MultiInputMultiOutputConverter(Node):
         individual conversion factors for each time step.
         Default: 1. If no conversion_factor is given for an in- or outflow, the
         conversion_factor is set to 1.
-    input_flow_shares : dict
-        Dictionary containing flow shares which shall be hold within related
-        input group. Keys must be connected input nodes (typically Buses).
+    emission_factors : dict
+        Dictionary with emission outflows, holding a dict with contributing
+        input nodes and related conversion factors.
+    flow_shares : dict
+        Contains dictionary with flow shares, see example below.
+        Minimum/Maximum/Fixed share of flow commodity
+        based upon the sum of individual flows defined by the commodity group.
+        Keys must be connected input/output nodes (typically Buses).
         The dictionary values can either be a scalar or an iterable with
         individual flow shares for each time step. If no flow share is given
-        for an input flow, no share is set for this flow.
-    output_flow_shares : dict
-        Dictionary containing flow shares which shall be hold within related
-        input group. Keys must be connected input nodes (typically Buses).
-        The dictionary values can either be a scalar or an iterable with
-        individual flow shares for each time step. If no flow share is given
-        for an input flow, no share is set for this flow.
+        for a flow, no share is set for this flow.
+    activity_bounds : dict
+        Dictionary containing activity bounds.
+    custom_attributes :
+    primary : str (optional)
+        Defines primary bus as the bus holding an investment. If no bus is
+        holding an investment, primary bus is set to None.
 
     Examples
     --------
     Defining a MIMO-converter:
 
-    >>> from oemof import solph
-    >>> bgas = solph.buses.Bus(label='natural_gas')
-    >>> bcoal = solph.buses.Bus(label='hard_coal')
-    >>> bel = solph.buses.Bus(label='electricity')
-    >>> bheat = solph.buses.Bus(label='heat')
+    >>> from oemof.solph import EnergySytem, Source, Sink
+    >>> import pandas as pd
+    >>> idx = pd.date_range("1/1/2017", periods=6, freq="H")
+    >>> es = EnergySystem(timeindex=idx)
 
-    >>> trsf = solph.components.Converter(
-    ...    label='pp_gas_1',
-    ...    inputs={bgas: solph.flows.Flow(), bcoal: solph.flows.Flow()},
-    ...    outputs={bel: solph.flows.Flow(), bheat: solph.flows.Flow()},
-    ...    conversion_factors={bel: 0.3, bheat: 0.5,
-    ...                        bgas: 0.8, bcoal: 0.2})
-    >>> print(sorted([x[1][5] for x in trsf.conversion_factors.items()]))
-    [0.2, 0.3, 0.5, 0.8]
+    >>> b_gas = Bus(label="INDGAS_OTH")
+    >>> gas_source = Source(label="gas_station", outputs={b_gas: Flow()})
+    >>> b_hydro = Bus(label="INDHH2_OTH")
+    >>> hydro_source = Source(label="hydro_station", outputs={b_hydro: Flow()})
+    >>> b_heat = Bus(label="IFTHTH")
+    >>> heat_demand = Sink(
+    ...    label="heat_demand",
+    ...    inputs={b_heat: Flow(fix=[66, 66, 66, 0, 0, 16], nominal_value=1)})
 
-    >>> type(trsf)
-    <class 'oemof.solph.components._converter.Converter'>
+    >>> b_ch4 = Bus(label="INDCH4N", balanced=False)
+    >>> b_co2 = Bus(label="INDCO2N", balanced=False)
+    >>> b_n2o = Bus(label="INDN2ON", balanced=False)
 
-    >>> sorted([str(i) for i in trsf.inputs])
-    ['hard_coal', 'natural_gas']
+    >>> es.add(b_gas,gas_source, b_hydro, hydro_source, b_heat, heat_demand,
+    ...       b_ch4, b_co2, b_n2o)
 
-    >>> trsf_new = solph.components.Converter(
-    ...    label='pp_gas_2',
-    ...    inputs={bgas: solph.flows.Flow()},
-    ...    outputs={bel: solph.flows.Flow(), bheat: solph.flows.Flow()},
-    ...    conversion_factors={bel: 0.3, bheat: 0.5})
-    >>> trsf_new.conversion_factors[bgas][3]
-    1
+    >>> es.add(
+    ...    MultiInputMultiOutputConverter(
+    ...        label="mimo",
+    ...        inputs={"in": {b_gas: Flow(), b_hydro: Flow()}},
+    ...        outputs={
+    ...            b_heat: Flow(),
+    ...            b_co2: Flow(),
+    ...            b_ch4: Flow(),
+    ...            b_n2o: Flow(),
+    ...        },
+    ...        emission_factors={
+    ...            b_co2: {b_gas: 56},
+    ...            b_ch4: {b_gas: 0.0012},
+    ...            b_n2o: {b_gas: 0.0006},
+    ...        },
+    ...        conversion_factors={"in": 1 / 0.82},
+    ...        flow_shares={"max": {b_hydro: [0, 0, 0, 0.5, 1, 1]}}))
+
+    >>> es.groups["mimo"].input_flow_shares["fix"]
+    {"<oemof.solph.buses._bus.Bus: 'INDHH2_OTH'>": [0, 0, 0, 0.5, 1, 1]}
 
     Notes
     -----
@@ -213,6 +228,7 @@ class MultiInputMultiOutputConverter(Node):
     ) -> Dict[Bus, Iterable]:
         """
         Set up the conversion_factors for each connected node.
+
         Parameters
         ----------
         conversion_factors : Dict[Bus, Union[float, Iterable]]
@@ -333,18 +349,22 @@ class MultiInputMultiOutputConverter(Node):
 
 class MultiInputMultiOutputConverterBlock(ScalarBlock):
     r"""Block for the linear relation of nodes with type
-    :class:`~oemof.solph.components._converter.ConverterBlock`
+    :class:`~oemof.industry.mimo_converter.MultiInputMultiOutputConverterBlock`
 
     **The following sets are created:** (-> see basic sets at
     :class:`.Model` )
 
-    CONVERTERS
+    MIMOS
         A set with all
-        :class:`~oemof.solph.components._converter.Converter` objects.
+        :class:`~oemof.industry.mimo_converter.MultiInputMultiOutputConverter`
+        objects.
 
     **The following constraints are created:**
 
-    Linear relation :attr:`om.ConverterBlock.relation[i,o,t]`
+    Linear relation :attr:`om.MultiInputMultiOutputConverterBlock.relation[i,o,t]`
+
+    todo adapt:
+
         .. math::
             P_{i}(p, t) \cdot \eta_{o}(t) =
             P_{o}(p, t) \cdot \eta_{i}(t), \\
@@ -385,20 +405,8 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
         super().__init__(*args, **kwargs)
 
     def _create(self, group=None):
-        """Creates the linear constraint for the class:`ConverterBlock`
-        block.
-
-        Parameters
-        ----------
-
-        group : list
-            List of oemof.solph.components.Converters objects for which
-            the linear relation of inputs and outputs is created
-            e.g. group = [trsf1, trsf2, trsf3, ...]. Note that the relation
-            is created for all existing relations of all inputs and all outputs
-            of the converter. The components inside the list need to hold
-            an attribute `conversion_factors` of type dict containing the
-            conversion factors for all inputs to outputs.
+        """Creates the linear constraint for the
+        class:`MultiInputMultiOutputConverterBlock` block.
         """
         if group is None:
             return None
@@ -693,13 +701,31 @@ class MultiInputMultiOutputConverterBlock(ScalarBlock):
 
 @dataclasses.dataclass(unsafe_hash=False, frozen=False, eq=False)
 class MIMO(MultiInputMultiOutputConverter, Facade):
-    """Facade for MIMO component.
+    """Facade for MultiInputMultiOutputConverter component.
 
+    This class provides a facade to use MultiInputMultiOutputConverter with
+    oemof.tabular.
     Pre-inits mimo specific parameters and drops them from `kwargs`: busses,
-    conversion_factors, emission_factors, and flow_shares.
+    conversion_factors, emission_factors, flow_shares and activity_bounds.
+    Then, initializes MultiInputMultiOutputConverter.
 
-    # todo naming convention for parameters (keys in csv) is required.
-    # Keys of busses start with "from_bus" or "to_bus", respectively. groups, etc.
+    If component is expandable the investment is set on the primary bus which
+    has to be defined by the keyword 'primary'.
+
+    You can add 'groups' to group certain inputs or output, e.g.
+    {"in": ["IISGAS-LB", "IISHH2-LB"], "out": ["IISELC-LB", "IISHTH-LB"]}.
+
+    Naming conventions:
+    - input buses start with 'from_bus'
+    - output busses start with 'to_bus'
+    - conversion factors: 'conversion_factor_<group_or_bus_name>'
+    - emission factors are defined by the group or bus label the emission is
+      associated with and the emission bus label itself:
+        'emission_factor_<group_or_bus_name>_<emission_bus_name>', e.g.
+        emission_factor_out_INDCH4N: ch4 emission associated with 'out' group
+    - flow shares: 'flow_share_<fix/min/max>_<bus_name>'
+    - activity bounds: 'activity_bound_<fix/max/min>
+
     """
 
     carrier: str

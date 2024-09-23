@@ -813,6 +813,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                     inputs[group_name] = group_dict
                 if group_direction == "to":
                     outputs[group_name] = group_dict
+            kwargs.pop("groups")
 
         for key, bus in list(kwargs.items()):
             if key.startswith("from_bus"):
@@ -822,7 +823,6 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
                 outputs[bus] = create_flow(bus)
                 kwargs.pop(key)
 
-        kwargs.pop("groups")
         return inputs, outputs
 
     @staticmethod

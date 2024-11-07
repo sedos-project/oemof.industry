@@ -770,14 +770,17 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         def create_flow(bus):
             """If component is expandable, put investment on primary bus."""
             investment = self._investment()
-            if not investment:
-                return Flow()
+            # if not investment:
+            #     return Flow()
             if investment and "primary" not in kwargs:
                 raise AttributeError(
                     "If you want to set investment you have to define primary bus to put investment on."
                 )
             if bus.label == kwargs["primary"]:
-                return Flow(nominal_value=investment)
+                if investment:
+                    return Flow(nominal_value=investment)
+                else:
+                    return Flow(nominal_value=self._nominal_value())
             return Flow()
 
         inputs = {}

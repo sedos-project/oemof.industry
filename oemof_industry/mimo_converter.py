@@ -749,6 +749,7 @@ class MIMO(MultiInputMultiOutputConverter, Facade):
         self.expandable: bool = kwargs.get("expandable", False)
         self.capacity_potential: float = kwargs.get("capacity_potential", float("+inf"))
         self.capacity_minimum: float = kwargs.get("capacity_minimum")
+        self.lifetime: int = kwargs.get("lifetime")
 
         inputs, outputs = self._init_inputs_and_outputs(buses, kwargs)
         conversion_factors = self._init_efficiencies(buses, groups, kwargs)

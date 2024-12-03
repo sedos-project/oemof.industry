@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import pyomo.environ as po
+import json
 
 from oemof.tabular.constraint_facades import ConstraintFacade
 
@@ -23,8 +24,9 @@ class CO2EmissionLimit(ConstraintFacade):
     ----------
     type : str
         Needs to be "co2_emission_limit" according to `CONSTRAINT_TYPE_MAP`
-    co2_limit : float
-        Maximum CO2 equivalent emission limit.
+    co2_limit : float or list
+        Maximum CO2 equivalent emission limit. In case of a list the constraint
+        is added for each period separately.
     ch4_factor : float
         Factor for calculating the CO2 equivalent of CH4 emissions. If not
         supplied, the global-warming potential (GWP) of 28 is used, according
@@ -110,25 +112,42 @@ class CO2EmissionLimit(ConstraintFacade):
 
     def build_constraint(self, model):
         """Pass constraint to the model"""
-        # check if there are output flows corresponding to commodities
-        flows = {"co2_commodities": 0, "ch4_commodities": 0,
-                 "n2o_commodities": 0, "negative_co2_commodities": 0}
-        for i, o in model.flows:
-            for commodity in self.commodities:
-                if o.label in self.commodities[commodity]:
-                    flows[commodity] += sum(model.flow[i, o, :, :])
 
         def co2_emission_rule(model):
+            """constraint rule"""
             expr = (
                     flows["co2_commodities"] +
                     flows["ch4_commodities"] * self.ch4_factor +
                     flows["n2o_commodities"] * self.n2o_factor -
                     flows["negative_co2_commodities"]
             )
-            return expr <= self.co2_limit
+            if isinstance(self.co2_limit, list):
+                return expr <= self.co2_limit[p]
+            elif isinstance(self.co2_limit, float) or isinstance(self.co2_limit, int):
+                return expr <= self.co2_limit
+            else:
+                raise TypeError(f"co2 limit should be list, float or int but "
+                                f"is {type(self.co2_limit)}.")
 
-        setattr(model, "co2_emission_limit",
-                po.Constraint(rule=co2_emission_rule))
+        if not isinstance(self.commodities, dict):
+            # load commodities as dict
+            self.commodities = json.loads(self.commodities.replace("#", '"'))
+
+        # check if there are output flows corresponding to commodities
+        p_counter = None
+        for p, t in model.TIMEINDEX:
+            if p != p_counter:  # to save for-loops flows are added as sum over all t
+                flows = {"co2_commodities": 0, "ch4_commodities": 0,
+                         "n2o_commodities": 0, "negative_co2_commodities": 0}
+                for i, o in model.flows:
+                    for commodity in self.commodities:
+                        if o.label in self.commodities[commodity]:
+                            flows[commodity] += sum(model.flow[i, o, p, :])
+
+                p_counter = p
+
+                setattr(model, f"co2_emission_limit_{p}",
+                        po.Constraint(rule=co2_emission_rule))
 
 
 CONSTRAINT_TYPE_MAP = {"co2_emission_limit": CO2EmissionLimit}

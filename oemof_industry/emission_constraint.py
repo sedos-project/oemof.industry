@@ -106,7 +106,7 @@ class CO2EmissionLimit(ConstraintFacade):
     """
     type: str
     co2_limit: float
-    ch4_factor: float = 258
+    ch4_factor: float = 28
     n2o_factor: float = 265
     commodities: dict = field(default_factory=dict)
 

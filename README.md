@@ -39,6 +39,12 @@ To use oemof.industry features in a project:
 
 Checkout the docstring examples ([mimo_converter](https://github.com/sedos-project/oemof.industry/blob/main/oemof_industry/mimo_converter.py), [emission_constraint](https://github.com/sedos-project/oemof.industry/blob/main/oemof_industry/emission_constraint.py)) and the [tests](https://github.com/sedos-project/oemof.industry/tree/main/tests) to get an overview on how to use the components.
 
+#### MIMO and multi-period optimization
+The mimo component was tested with a multi-period optimization of a [steel industry](https://github.com/sedos-project/steel_industry) secenario. 
+For processing results of a multi-period optimization containing mimos you have to drop the mimo groups from the model results.
+A quick fix to that is adding the following line to oemof.solph.processing [here](https://github.com/oemof/oemof-solph/blob/v0.5.2.dev1/src/oemof/solph/processing.py#L241).
+
+    df_dict = {key: value for key, value in df_dict.items() if type(key[1]) != str}
 
 ## Contributing
 
